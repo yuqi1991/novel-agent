@@ -1,0 +1,33 @@
+{
+  "name": "Bell Reef Lorebook",
+  "description": "SillyTavern world info fixture for the Bell Reef.",
+  "entries": {
+    "0": {
+      "uid": 0,
+      "key": ["Bell Reef", "drowned district"],
+      "keysecondary": ["storm bells"],
+      "comment": "The Bell Reef",
+      "content": "A submerged district that rings during storms.",
+      "constant": true,
+      "disable": false,
+      "order": 100,
+      "position": 0,
+      "extensions": {
+        "tags": ["place", "mystery"]
+      }
+    },
+    "1": {
+      "uid": 1,
+      "key": ["Oath Furnace"],
+      "comment": "Oath Furnace",
+      "content": "A legal chamber where vows are burned into iron.",
+      "constant": false,
+      "disable": false,
+      "order": 200,
+      "position": 0,
+      "extensions": {
+        "tags": ["law", "ritual"]
+      }
+    }
+  }
+}
