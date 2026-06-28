@@ -1,0 +1,8 @@
+{
+  "runtime": "pi",
+  "cwd": ".",
+  "agentDir": "~/.pi/agent",
+  "skillPaths": ["./config/pi-skills"],
+  "promptPaths": ["./config/pi-prompts"],
+  "noTools": true
+}

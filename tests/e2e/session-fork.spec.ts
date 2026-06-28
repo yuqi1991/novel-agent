@@ -19,10 +19,7 @@ test("Session Fork copies only the selected transcript prefix into a new Play Se
   await expect(chat.getByText(firstMessage, { exact: true })).toBeVisible();
   await expect(chat.getByText(secondMessage, { exact: true })).toBeVisible();
 
-  const firstResponseItem = chat
-    .locator(".chat-message")
-    .filter({ hasText: "Narrative Response" })
-    .first();
+  const firstResponseItem = chat.locator(".chat-message.system").first();
   await firstResponseItem.getByRole("button", { name: "分叉" }).click();
 
   const saveManager = await openPanel(page, "存档管理");

@@ -187,6 +187,8 @@ Responsibilities:
 - Map tools and skills into runtime-specific configuration.
 - Normalize runtime errors and outputs.
 
+MVP implementation uses `@earendil-works/pi-coding-agent` through an in-process adapter. Provider credentials stay in Pi auth/env configuration rather than the Web UI. Automated tests use a deterministic stub runtime.
+
 ### trace-service
 
 Responsibilities:

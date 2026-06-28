@@ -14,13 +14,12 @@ test("Reply Variants can be rerolled, selected, and persisted at the mutable tai
   await chat.getByRole("button", { name: "发送" }).click();
 
   await expect(page.getByText("回复 1 / 1")).toBeVisible();
-  const firstVariantText = (await chat.getByText("Narrative Response").last().innerText()).trim();
+  const firstVariantText = (await chat.locator(".chat-message.system p").last().innerText()).trim();
 
   await page.getByRole("button", { name: "重掷回复" }).click();
 
   await expect(page.getByText("回复 2 / 2")).toBeVisible();
-  await expect(chat.getByText("Alternative 2")).toBeVisible();
-  const secondVariantText = (await chat.getByText("Narrative Response").last().innerText()).trim();
+  const secondVariantText = (await chat.locator(".chat-message.system p").last().innerText()).trim();
   expect(secondVariantText).not.toEqual(firstVariantText);
 
   await page.getByRole("button", { name: "1" }).click();

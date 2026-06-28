@@ -15,6 +15,7 @@ import {
   workflowTraces
 } from "@/db/schema";
 import { createStory } from "./story-service";
+import { setAgentRuntimeForTesting } from "./agent-runtime";
 import {
   createPlaySession,
   forkPlaySession,
@@ -40,6 +41,7 @@ async function createTestDatabase() {
 }
 
 afterEach(() => {
+  setAgentRuntimeForTesting(null);
   if (tempDir) {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -227,6 +229,44 @@ describe("session-service", () => {
     );
     expect(rerolled.replyVariant.narrativeResponseText).toContain("Alternative 2");
     expect(persistedVariants).toHaveLength(2);
+  });
+
+  it("keeps failed runtime turns out of the transcript while preserving a failed trace", async () => {
+    const db = await createTestDatabase();
+    const story = await createStory({ title: "Broken Runtime" }, db);
+    const session = await createPlaySession({ storyId: story.id, title: "Failure Save" }, db);
+    setAgentRuntimeForTesting({
+      async runTurn() {
+        throw new Error("provider auth missing");
+      }
+    });
+
+    await expect(
+      submitPlayerMessage(
+        {
+          storyId: story.id,
+          sessionId: session.id,
+          messageText: "我推开门。"
+        },
+        db
+      )
+    ).rejects.toThrow("provider auth missing");
+
+    const transcript = await getSessionTranscript({ storyId: story.id, sessionId: session.id }, db);
+    const persistedPlayerMessages = await db.select().from(playerMessages);
+    const persistedVariants = await db.select().from(replyVariants);
+    const persistedTraces = await db.select().from(workflowTraces);
+
+    expect(transcript.positions).toEqual([]);
+    expect(persistedPlayerMessages).toEqual([]);
+    expect(persistedVariants).toEqual([]);
+    expect(persistedTraces).toEqual([
+      expect.objectContaining({
+        sessionId: session.id,
+        status: "failed",
+        errorJson: expect.stringContaining("provider auth missing")
+      })
+    ]);
   });
 
   it("selects a saved latest Reply Variant as the active transcript path", async () => {

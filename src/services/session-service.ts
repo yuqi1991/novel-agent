@@ -229,11 +229,11 @@ export async function submitPlayerMessage(
   });
   const parsedInput = "storyId" in input ? submitPlayerMessageInput.parse(input) : partialInput.parse(input);
 
-  return database.transaction(async (tx) => {
-    const sessionId: string = parsedInput.sessionId;
-    const messageText: string = parsedInput.messageText;
-    const explicitStoryId = "storyId" in parsedInput ? String(parsedInput.storyId) : null;
-    const storyId = explicitStoryId ?? (await getSessionStoryId(sessionId, tx));
+  const sessionId: string = parsedInput.sessionId;
+  const messageText: string = parsedInput.messageText;
+  const explicitStoryId = "storyId" in parsedInput ? String(parsedInput.storyId) : null;
+  const storyId = explicitStoryId ?? (await getSessionStoryId(sessionId, database));
+  const playerTurn = await database.transaction(async (tx) => {
     await assertSessionBelongsToStory(sessionId, storyId, tx);
 
     const playerPositionIndex = await nextPositionIndex(sessionId, tx);
@@ -253,21 +253,31 @@ export async function submitPlayerMessage(
       messageText
     });
 
-    const workflow = await runGenerationWorkflow(
+    return { playerPositionIndex, playerPositionId, playerMessageId };
+  });
+
+  let workflow: Awaited<ReturnType<typeof runGenerationWorkflow>>;
+  try {
+    workflow = await runGenerationWorkflow(
       {
         storyId,
         sessionId,
         playerMessage: messageText
       },
-      tx
+      database
     );
+  } catch (error) {
+    await removePlayerTurn(sessionId, playerTurn.playerPositionId, playerTurn.playerMessageId, database);
+    throw error;
+  }
 
+  return database.transaction(async (tx) => {
     const systemPositionId = newId("pos");
     const replyVariantId = newId("variant");
     await tx.insert(conversationPositions).values({
       id: systemPositionId,
       sessionId,
-      positionIndex: playerPositionIndex + 1,
+      positionIndex: playerTurn.playerPositionIndex + 1,
       kind: "system_response",
       selectedVariantId: replyVariantId
     });
@@ -292,8 +302,8 @@ export async function submitPlayerMessage(
     }
 
     return {
-      playerPositionId,
-      playerMessageId,
+      playerPositionId: playerTurn.playerPositionId,
+      playerMessageId: playerTurn.playerMessageId,
       systemPositionId,
       replyVariantId,
       selectedVariantId: replyVariantId,
@@ -311,35 +321,38 @@ export async function rerollLatestReplyVariant(
 ) {
   const parsed = rerollLatestReplyVariantInput.parse(input);
 
-  return database.transaction(async (tx) => {
+  const rerollContext = await database.transaction(async (tx) => {
     await assertSessionBelongsToStory(parsed.sessionId, parsed.storyId, tx);
     const systemPosition = await getMutableTailSystemPosition(parsed.sessionId, tx);
     const playerMessage = await getPlayerMessageBeforeSystemPosition(parsed.sessionId, systemPosition.positionIndex, tx);
     const nextVariantIndex = await nextReplyVariantIndex(parsed.sessionId, systemPosition.id, tx);
+    return { systemPosition, playerMessage, nextVariantIndex };
+  });
 
-    const workflow = await runGenerationWorkflow(
-      {
-        storyId: parsed.storyId,
-        sessionId: parsed.sessionId,
-        playerMessage: playerMessage.messageText,
-        variantIndex: nextVariantIndex
-      },
-      tx
-    );
+  const workflow = await runGenerationWorkflow(
+    {
+      storyId: parsed.storyId,
+      sessionId: parsed.sessionId,
+      playerMessage: rerollContext.playerMessage.messageText,
+      variantIndex: rerollContext.nextVariantIndex
+    },
+    database
+  );
 
+  return database.transaction(async (tx) => {
     const replyVariantId = newId("variant");
     await tx.insert(replyVariants).values({
       id: replyVariantId,
       sessionId: parsed.sessionId,
-      conversationPositionId: systemPosition.id,
-      variantIndex: nextVariantIndex,
+      conversationPositionId: rerollContext.systemPosition.id,
+      variantIndex: rerollContext.nextVariantIndex,
       narrativeResponseText: workflow.narrativeResponseText,
       workflowTraceId: workflow.workflowTraceId
     });
     await tx
       .update(conversationPositions)
       .set({ selectedVariantId: replyVariantId })
-      .where(eq(conversationPositions.id, systemPosition.id));
+      .where(eq(conversationPositions.id, rerollContext.systemPosition.id));
 
     const [replyVariant] = await tx.select().from(replyVariants).where(eq(replyVariants.id, replyVariantId)).limit(1);
     const [workflowTrace] = await tx
@@ -353,7 +366,7 @@ export async function rerollLatestReplyVariant(
     }
 
     return {
-      conversationPositionId: systemPosition.id,
+      conversationPositionId: rerollContext.systemPosition.id,
       selectedVariantId: replyVariantId,
       replyVariant,
       workflowTrace
@@ -681,6 +694,20 @@ async function nextPositionIndex(sessionId: string, database: Pick<Database, "se
     .where(eq(conversationPositions.sessionId, sessionId));
 
   return row?.nextIndex ?? 0;
+}
+
+async function removePlayerTurn(
+  sessionId: string,
+  playerPositionId: string,
+  playerMessageId: string,
+  database: Database
+) {
+  await database
+    .delete(playerMessages)
+    .where(and(eq(playerMessages.id, playerMessageId), eq(playerMessages.sessionId, sessionId)));
+  await database
+    .delete(conversationPositions)
+    .where(and(eq(conversationPositions.id, playerPositionId), eq(conversationPositions.sessionId, sessionId)));
 }
 
 function mustGet(map: Map<string, string>, key: string) {

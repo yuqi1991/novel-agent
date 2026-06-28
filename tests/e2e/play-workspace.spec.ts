@@ -22,9 +22,9 @@ test("Play Workspace creates a session, sends one message, and persists the Narr
   await chat.getByRole("button", { name: "发送" }).click();
 
   await expect(chat.getByText(playerMessage, { exact: true })).toBeVisible();
-  await expect(chat.getByText("Narrative Response")).toBeVisible();
+  await expect(chat.locator(".chat-message.system")).toBeVisible();
 
-  const responseText = (await chat.getByText("Narrative Response").last().innerText()).trim();
+  const responseText = (await chat.locator(".chat-message.system p").last().innerText()).trim();
   expect(responseText.length).toBeGreaterThan(0);
 
   await page.reload();

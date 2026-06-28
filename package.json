@@ -16,6 +16,7 @@
     "db:migrate": "tsx src/db/migrate.ts"
   },
   "dependencies": {
+    "@earendil-works/pi-coding-agent": "^0.80.2",
     "@libsql/client": "^0.15.15",
     "drizzle-orm": "^0.45.1",
     "next": "^16.2.9",
