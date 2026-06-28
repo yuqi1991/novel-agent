@@ -4,6 +4,7 @@ import type { Database } from "@/db/client";
 import { db } from "@/db/client";
 import { stories, storySettings } from "@/db/schema";
 import { newId } from "@/domain/ids";
+import { ensureStoryDataDirectory } from "./user-data-storage";
 
 export const createStoryInput = z.object({
   title: z.string().trim().min(1, "Story title is required").max(120),
@@ -41,5 +42,6 @@ export async function createStory(input: CreateStoryInput, database: Database = 
   if (!story) {
     throw new Error("Story was not persisted");
   }
+  ensureStoryDataDirectory(story.id);
   return story;
 }

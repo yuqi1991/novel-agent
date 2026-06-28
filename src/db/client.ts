@@ -5,7 +5,7 @@ import path from "node:path";
 import * as schema from "./schema";
 
 export function resolveDatabaseUrl() {
-  return process.env.DATABASE_URL ?? "file:./data/novel-agent.db";
+  return process.env.DATABASE_URL ?? "file:./user_data/novel-agent.db";
 }
 
 function ensureLocalDirectory(url: string) {

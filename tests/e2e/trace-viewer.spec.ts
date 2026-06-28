@@ -13,7 +13,7 @@ test("Trace Viewer shows Workflow Trace details after a player message", async (
   const traceViewer = await openPanel(page, "运行记录");
   await expect(traceViewer.getByRole("heading", { name: "运行记录" })).toBeVisible();
   await expect(traceViewer.getByText("succeeded").first()).toBeVisible();
-  await traceViewer.getByText("输入 / 输出").click();
+  await traceViewer.getByText("输入 / 输出").first().click();
   await expect(traceViewer.getByText("runtimeName").first()).toBeVisible();
-  await expect(traceViewer.getByText("I open the brass door")).toBeVisible();
+  await expect(traceViewer.getByText("I open the brass door").first()).toBeVisible();
 });

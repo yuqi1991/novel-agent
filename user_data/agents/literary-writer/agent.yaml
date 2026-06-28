@@ -1,0 +1,17 @@
+id: literary-writer
+name: 文学写手
+role: literary_writer
+model:
+  provider:
+  model:
+timeout_ms: 90000
+skills:
+  - rp-prose-writing
+allowed_tools: []
+system_prompt_file: system.md
+prompt_dirs:
+  - prompts
+skill_dirs:
+  - skills
+instructions: |
+  根据剧情设计师的计划写成最终给玩家看的中文 RP 正文。

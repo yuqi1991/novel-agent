@@ -1,3 +1,5 @@
+import fs from "node:fs";
+
 import type { AgentRuntime, AgentRuntimeInput } from "./types";
 import type { AgentRuntimeConfig } from "./runtime-config";
 
@@ -19,16 +21,17 @@ export class PiAgentRuntime implements AgentRuntime {
     const modelRegistry = ModelRegistry.create(authStorage, this.config.modelsPath);
     const settingsManager = SettingsManager.create(this.config.cwd, agentDir, { projectTrusted: true });
     const model = resolveModel(modelRegistry, input.modelSettings);
+    const systemPrompt = readSystemPrompt(input.fileAgent?.systemPromptPath) ?? buildSystemPrompt(input);
     const resourceLoader = new DefaultResourceLoader({
       cwd: this.config.cwd,
       agentDir,
       settingsManager,
-      additionalSkillPaths: this.config.skillPaths,
-      additionalPromptTemplatePaths: this.config.promptPaths,
+      additionalSkillPaths: input.fileAgent?.skillPaths ?? [],
+      additionalPromptTemplatePaths: input.fileAgent?.promptPaths ?? [],
       noExtensions: true,
       noThemes: true,
       noContextFiles: true,
-      systemPrompt: buildSystemPrompt(input)
+      systemPrompt
     });
     await resourceLoader.reload();
 
@@ -61,11 +64,19 @@ export class PiAgentRuntime implements AgentRuntime {
       metadata: {
         cwd: this.config.cwd,
         noTools: this.config.noTools,
-        skillPathCount: this.config.skillPaths.length,
-        promptPathCount: this.config.promptPaths.length
+        agentId: input.fileAgent?.id,
+        skillPathCount: input.fileAgent?.skillPaths.length ?? 0,
+        promptPathCount: input.fileAgent?.promptPaths.length ?? 0
       }
     };
   }
+}
+
+function readSystemPrompt(filePath: string | undefined) {
+  if (!filePath) {
+    return undefined;
+  }
+  return fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : undefined;
 }
 
 function resolveModel(

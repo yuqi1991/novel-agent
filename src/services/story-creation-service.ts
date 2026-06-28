@@ -16,6 +16,7 @@ import {
   convertSillyTavernWorldPayload,
   parseSillyTavernJsonPayload
 } from "./sillytavern-import-service";
+import { ensureStoryDataDirectory } from "./user-data-storage";
 
 const importedAssetInput = z.object({
   sourceType: z.enum(["sillytavern_character_card", "sillytavern_world_lorebook"]),
@@ -173,6 +174,7 @@ export async function createStoryFromDraft(input: CreateStoryFromDraftInput, dat
   if (!story) {
     throw new Error("故事没有成功保存");
   }
+  ensureStoryDataDirectory(story.id);
   return story;
 }
 

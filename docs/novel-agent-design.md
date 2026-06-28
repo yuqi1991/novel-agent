@@ -73,6 +73,8 @@ Each Agent Assignment can define:
 - execution order
 - allowed tools
 
+The current implementation loads the active play workflow from repo-local files under `user_data/`. `user_data/config.yaml` names the workflow and ordered agent ids; `user_data/agents/<agent-id>/agent.yaml` defines each agent. The Web UI configuration remains useful for management and future selection, but advanced agent/runtime tuning is file-first.
+
 Each Agent Assignment has an Agent Timeout. If an agent fails or times out, the Generation Workflow fails and produces no Reply Variant. Failed workflow attempts do not enter the Conversation Log.
 
 Workflow Traces are kept separately for diagnostics. The Trace Viewer exposes agent inputs, outputs, timing, and failures for configuration and debugging.
@@ -92,6 +94,8 @@ pi-agent should be treated as an Agent Runtime candidate or adapter, not as the 
 A Tool is a callable capability exposed through the Agent Runtime. Tool sources can include built-in local capabilities, user-provided MCP configuration, web search through MCP, or other external APIs.
 
 A Skill is a reusable task method available to an Agent Assignment. A Skill can describe how to perform a job and may use one or more Tools. Skills are not just tool lists.
+
+File-defined skills use the standard skill layout: `skills/<skill-id>/SKILL.md` is the prompt entrypoint and begins with frontmatter containing `name` and `description`. Agent skill folders live under `user_data/agents/<agent-id>/skills/`.
 
 Each Agent Assignment has a Skill Set. External tools such as web search are optional and configured by the user, typically through MCP. The core MVP should not require network access for normal play.
 
@@ -126,6 +130,8 @@ The MVP Web UI contains these workspaces:
 ## Storage Decision
 
 SQLite is the primary local store. It stores Stories, Play Sessions, Conversation Logs, Reply Variants, Selected Paths, Wiki Snapshots, Story Material, Imported Assets, Orchestration Configurations, and Workflow Traces.
+
+All local runtime configuration and mutable runtime data lives under `user_data/` in the repo. The default SQLite path is `user_data/novel-agent.db`; provider auth/model config is under `user_data/providers/`; file-defined agents and skills are under `user_data/agents/`. Story and save directories are created under `user_data/stories/<story-id>/saves/<session-id>/wiki/`; current Progress Wiki document content remains SQLite-backed until the file-backed wiki writer is added.
 
 JSONL may be used for import, export, backup, and interchange, but not as the authoritative application database. This is recorded in ADR 0001.
 

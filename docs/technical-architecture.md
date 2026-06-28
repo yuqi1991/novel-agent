@@ -41,13 +41,31 @@ The UI should be work-focused rather than landing-page oriented. The primary sur
 
 ### Persistence
 
-Use SQLite as the authoritative local store. Use Drizzle ORM with generated migrations as the recommended TypeScript database layer.
+Use `user_data/` as the repo-local runtime data root. Use SQLite as the authoritative local structured store, located by default at `user_data/novel-agent.db`. Use Drizzle ORM with generated migrations as the recommended TypeScript database layer.
 
 Rationale:
 
 - The domain needs relational integrity for Stories, Play Sessions, Conversation Positions, Reply Variants, Selected Paths, Wiki Snapshots, Imported Assets, and Orchestration Configurations.
 - Drizzle keeps schema definitions close to TypeScript while still producing explicit migrations.
 - JSON fields can be used for flexible imported payloads, skill configuration, model configuration, and provider-specific metadata.
+- Runtime config, provider model definitions, provider auth, agent prompt files, and agent skills live under `user_data/` so the app does not depend on `~/.pi/agent`.
+- Creating a Story or Play Session also creates the corresponding repo-local directories under `user_data/stories/<story-id>/saves/<session-id>/wiki/`. In this slice, Progress Wiki document records are still stored in SQLite; the directory layout is reserved for the file-backed wiki writer.
+
+The MVP `user_data/` layout is:
+
+```text
+user_data/
+  config.yaml
+  novel-agent.db
+  providers/auth.json
+  providers/models.json
+  agents/<agent-id>/agent.yaml
+  agents/<agent-id>/system.md
+  agents/<agent-id>/skills/<skill-id>/SKILL.md
+  agents/<agent-id>/prompts/
+  stories/
+  lorebooks/
+```
 
 ### Agent Runtime
 
@@ -105,9 +123,9 @@ This layer should be deterministic and testable without making LLM calls.
 
 Owns Generation Workflow execution:
 
-- Loads the selected Orchestration Configuration.
+- Loads the file-defined workflow from `user_data/config.yaml` for the current MVP play loop. Database Orchestration Configurations remain for UI compatibility and future selection.
 - Builds the initial Context Pack.
-- Runs Agent Assignments in Linear Workflow order.
+- Runs configured agents in Linear Workflow order.
 - Passes Agent Output strings downstream.
 - Enforces Agent Timeout.
 - Records Workflow Trace.
@@ -175,8 +193,9 @@ Responsibilities:
 
 - Manage Orchestration Configurations and Agent Assignments.
 - Resolve Model Defaults and Model Overrides.
-- Validate Linear Workflow order.
-- Execute Generation Workflows through the Multi-Agent Scheduler.
+- Load repo-local workflow/agent definitions from `user_data/config.yaml` and `user_data/agents/*`.
+- Execute Linear Generation Workflows through the Multi-Agent Scheduler.
+- Persist one Workflow Trace Step per agent invocation.
 
 ### runtime-adapter
 
@@ -188,6 +207,8 @@ Responsibilities:
 - Normalize runtime errors and outputs.
 
 MVP implementation uses `@earendil-works/pi-coding-agent` through an in-process adapter. Provider credentials stay in Pi auth/env configuration rather than the Web UI. Automated tests use a deterministic stub runtime.
+
+The Pi adapter must construct `AuthStorage` and `ModelRegistry` from repo-local paths: `user_data/providers/auth.json` and `user_data/providers/models.json`. It must load each file-defined agent's `system.md`, `prompts/`, and `skills/` through Pi's resource loader. Skills use the standard Pi/Codex-style layout: `skills/<skill-id>/SKILL.md` with frontmatter `name` and `description`.
 
 ### trace-service
 
@@ -477,9 +498,9 @@ Suggested fields:
 1. User submits a player message in the Play Workspace.
 2. session-service appends a player Conversation Position.
 3. context-assembly-service creates a Context Pack from Selected Path, recent messages, Story Material, World Entries, optional Player Character, and Progress Wiki.
-4. orchestration-service loads the selected Orchestration Configuration.
-5. Multi-Agent Scheduler executes Agent Assignments in Linear Workflow order.
-6. Agent Runtime invokes each agent with its instructions, Skill Set, tools, model settings, timeout, and input.
+4. orchestration-service loads the file-defined workflow from `user_data/config.yaml` and the agent files under `user_data/agents/`.
+5. Multi-Agent Scheduler executes configured agents in Linear Workflow order.
+6. Agent Runtime invokes each agent with its file-defined system prompt, skills, prompts, model settings, timeout, and input.
 7. Scheduler records Workflow Trace steps.
 8. If any step fails or times out, the workflow ends as Workflow Failure and no Reply Variant is created.
 9. If the workflow succeeds, the final Agent Output is stored as a Reply Variant for a system response Conversation Position.

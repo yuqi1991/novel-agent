@@ -11,12 +11,14 @@ let tempDir: string;
 
 async function createTestDatabase() {
   tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "novel-agent-test-"));
+  process.env.NOVEL_AGENT_USER_DATA_DIR = path.join(tempDir, "user_data");
   const db = createDatabase(`file:${path.join(tempDir, "test.db")}`);
   await migrate(db, { migrationsFolder: "drizzle" });
   return db;
 }
 
 afterEach(() => {
+  delete process.env.NOVEL_AGENT_USER_DATA_DIR;
   if (tempDir) {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -35,6 +37,7 @@ describe("story-service", () => {
     expect(allStories[0]?.description).toBe("Neon sects.");
     expect(settings).toHaveLength(1);
     expect(settings[0]?.storyId).toBe(story.id);
+    expect(fs.existsSync(path.join(tempDir, "user_data", "stories", story.id, "saves"))).toBe(true);
   });
 
   it("rejects blank Story titles", async () => {

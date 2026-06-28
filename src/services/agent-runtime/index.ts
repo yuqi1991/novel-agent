@@ -1,9 +1,10 @@
 import { DeterministicAgentRuntime } from "./stub-runtime";
+import type { AgentRuntimeConfig } from "./runtime-config";
 import type { AgentRuntime } from "./types";
 
 let runtimeOverride: AgentRuntime | null = null;
 
-export function getAgentRuntime() {
+export function getAgentRuntime(config?: AgentRuntimeConfig) {
   if (runtimeOverride) {
     return runtimeOverride;
   }
@@ -15,13 +16,12 @@ export function getAgentRuntime() {
 
   return {
     async runTurn(input) {
-      const { loadAgentRuntimeConfig } = await import("./runtime-config");
-      const config = loadAgentRuntimeConfig();
-      if (config.runtime === "stub") {
+      const runtimeConfig = config ?? (await import("./runtime-config")).loadAgentRuntimeConfig();
+      if (runtimeConfig.runtime === "stub") {
         return new DeterministicAgentRuntime().runTurn(input);
       }
       const { PiAgentRuntime } = await import("./pi-runtime");
-      return new PiAgentRuntime(config).runTurn(input);
+      return new PiAgentRuntime(runtimeConfig).runTurn(input);
     }
   } satisfies AgentRuntime;
 }
@@ -30,4 +30,10 @@ export function setAgentRuntimeForTesting(runtime: AgentRuntime | null) {
   runtimeOverride = runtime;
 }
 
-export type { AgentRuntime, AgentRuntimeInput, AgentRuntimeResult, RuntimeModelSettings } from "./types";
+export type {
+  AgentRuntime,
+  AgentRuntimeInput,
+  AgentRuntimeResult,
+  AgentRuntimeStepOutput,
+  RuntimeModelSettings
+} from "./types";

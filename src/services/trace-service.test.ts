@@ -39,15 +39,22 @@ describe("trace-service", () => {
         sessionId: session.id,
         status: "succeeded",
         configuration: expect.objectContaining({ name: expect.any(String) }),
-        steps: [
+        steps: expect.arrayContaining([
           expect.objectContaining({
             orderIndex: 0,
             status: "succeeded",
             inputPayloadJson: expect.stringContaining("I open the brass door"),
             outputText: expect.stringContaining("Narrative Response")
+          }),
+          expect.objectContaining({
+            orderIndex: 1,
+            status: "succeeded",
+            inputPayloadJson: expect.stringContaining("previousStepOutputs"),
+            outputText: expect.stringContaining("Narrative Response")
           })
-        ]
+        ])
       })
     );
+    expect(traces[0]?.steps).toHaveLength(2);
   });
 });

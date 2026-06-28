@@ -13,6 +13,7 @@ import {
 import { newId } from "@/domain/ids";
 import { runGenerationWorkflow } from "./orchestration-service";
 import { copyEligibleWikiSnapshotForFork } from "./progress-wiki-service";
+import { ensureSessionDataDirectory } from "./user-data-storage";
 
 const idSchema = z.string().trim().min(1, "Id is required");
 const storyIdSchema = z.string().trim().min(1, "Story id is required");
@@ -115,6 +116,7 @@ export async function createPlaySession(input: CreatePlaySessionInput, database:
   if (!session) {
     throw new Error("Play Session was not persisted");
   }
+  ensureSessionDataDirectory({ storyId: session.storyId, sessionId: session.id });
   return session;
 }
 
@@ -566,6 +568,7 @@ export async function forkPlaySession(input: ForkPlaySessionInput, database: Dat
     if (!forkedSession) {
       throw new Error("Forked Play Session was not persisted");
     }
+    ensureSessionDataDirectory({ storyId: forkedSession.storyId, sessionId: forkedSession.id });
 
     return forkedSession;
   });

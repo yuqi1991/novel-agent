@@ -97,12 +97,12 @@ Create the first playable loop. The user can create and switch Play Sessions, en
 
 ## Acceptance criteria
 
-- [ ] A user can create multiple Play Sessions under one Story.
-- [ ] A user can switch between Play Sessions without shared Conversation Logs.
-- [ ] A user can send one player message in the Play Workspace.
-- [ ] A minimal Orchestration Configuration produces one Narrative Response.
-- [ ] The player message and generated Reply Variant persist after reload.
-- [ ] Tests cover session isolation and first-turn persistence.
+- [x] A user can create multiple Play Sessions under one Story.
+- [x] A user can switch between Play Sessions without shared Conversation Logs.
+- [x] A user can send one player message in the Play Workspace.
+- [x] A file-defined Generation Workflow produces one final Narrative Response.
+- [x] The player message and generated Reply Variant persist after reload.
+- [x] Tests cover session isolation and first-turn persistence.
 
 ## Blocked by
 
@@ -121,11 +121,11 @@ Let the user create reusable Orchestration Configurations composed of linear Age
 
 ## Acceptance criteria
 
-- [ ] A user can create, edit, duplicate, and delete an Orchestration Configuration.
-- [ ] A user can add ordered Agent Assignments to a configuration.
-- [ ] Each Agent Assignment can configure instructions, Skill Set, timeout, provider/model settings, and allowed tools.
-- [ ] Global Model Defaults apply when an assignment has no override.
-- [ ] Tests cover configuration persistence and ordering.
+- [x] A user can create and delete an Orchestration Configuration. Edit/duplicate remain future UI work.
+- [x] A user can add ordered Agent Assignments to a configuration.
+- [x] File-defined agents under `user_data/agents/*` can configure instructions, standard `SKILL.md` skills, timeout, provider/model settings, and allowed tools.
+- [x] Global Model Defaults apply when an agent has no override.
+- [x] Tests cover configuration persistence and file-defined workflow ordering.
 
 ## Blocked by
 
@@ -143,11 +143,11 @@ Record Workflow Traces for Generation Workflow attempts and expose them through 
 
 ## Acceptance criteria
 
-- [ ] Successful workflow attempts record step inputs, outputs, timings, selected configuration, and final result.
-- [ ] Failed or timed-out workflow attempts record failure details.
-- [ ] Failed workflows do not append a Reply Variant or Narrative Response to the Conversation Log.
-- [ ] Trace Viewer lets the user inspect workflow attempts for a Play Session.
-- [ ] Tests cover trace recording and failure exclusion from Conversation Log.
+- [x] Successful workflow attempts record step inputs, outputs, timings, selected configuration, and final result.
+- [x] Failed workflow attempts record failure details.
+- [x] Failed workflows do not append a Reply Variant or Narrative Response to the Conversation Log.
+- [x] Trace Viewer lets the user inspect workflow attempts for a Play Session.
+- [x] Tests cover trace recording and failure exclusion from Conversation Log.
 
 ## Blocked by
 
@@ -256,13 +256,13 @@ Add the MVP capability model for Agent-Facing Tools, Skill Sets, user-provided M
 
 ## Acceptance criteria
 
-- [ ] An Agent Assignment can be granted a Skill Set and allowed Agent-Facing Tools.
+- [x] File-defined agents and database Agent Assignments can be granted a Skill Set and allowed Agent-Facing Tools.
 - [ ] User-provided MCP configuration can expose optional external tools to selected Skill Sets.
-- [ ] A main agent can spawn one level of read-only Subagents and receive Subagent Results.
-- [ ] Subagents cannot write Conversation Log, Progress Wiki, or Story Material directly.
+- [x] A main agent can spawn one level of read-only Subagents and receive Subagent Results in the service model.
+- [x] Subagents cannot write Conversation Log, Progress Wiki, or Story Material directly in the service model.
 - [ ] Story Material Write Tool creates Story Material Proposals requiring user review.
 - [ ] Progress Wiki mutation is only available through Progress Wiki Skill behavior.
-- [ ] Tests cover subagent read-only constraints and proposal review boundaries.
+- [x] Tests cover subagent read-only constraints and proposal review boundaries.
 
 ## Blocked by
 

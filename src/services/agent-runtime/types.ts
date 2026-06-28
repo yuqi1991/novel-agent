@@ -1,5 +1,6 @@
 import type { agentAssignments, orchestrationConfigurations } from "@/db/schema";
 import type { ContextPack } from "@/services/context-assembly-service";
+import type { UserDataAgentConfig } from "./runtime-config";
 
 export type RuntimeModelSettings = {
   provider?: string;
@@ -13,9 +14,17 @@ export type AgentRuntimeInput = {
   contextPack: ContextPack;
   configuration: typeof orchestrationConfigurations.$inferSelect;
   assignment: typeof agentAssignments.$inferSelect | null;
+  fileAgent?: UserDataAgentConfig;
   modelSettings: RuntimeModelSettings;
   timeoutMs: number;
   variantIndex: number;
+  previousStepOutputs?: AgentRuntimeStepOutput[];
+};
+
+export type AgentRuntimeStepOutput = {
+  agentId: string;
+  agentName: string;
+  outputText: string;
 };
 
 export type AgentRuntimeResult = {

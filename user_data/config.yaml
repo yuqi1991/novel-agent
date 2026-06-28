@@ -1,0 +1,18 @@
+runtime: pi
+cwd: .
+defaultWorkflow: default_play
+providers:
+  defaults:
+    provider: deepseek
+    model: deepseek-v4-flash
+pi:
+  agentDir: .
+  authPath: providers/auth.json
+  modelsPath: providers/models.json
+  noTools: true
+workflows:
+  default_play:
+    type: linear
+    agents:
+      - plot-designer
+      - literary-writer

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import fs from "node:fs";
 import os from "node:os";
@@ -22,14 +22,16 @@ async function createTestDatabase() {
 
 afterEach(() => {
   setAgentRuntimeForTesting(null);
+  vi.unstubAllEnvs();
   if (tempDir) {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
 
 describe("orchestration-service runtime execution", () => {
-  it("passes story material, world entries, and player input to the Agent Runtime prompt", async () => {
+  it("runs the configured multi-agent workflow and returns the final agent output", async () => {
     const db = await createTestDatabase();
+    vi.stubEnv("NOVEL_AGENT_USER_DATA_DIR", path.join(tempDir, "user_data"));
     const story = await createStory({ title: "莉莉儿" }, db);
     const session = await createPlaySession({ storyId: story.id, title: "默认存档" }, db);
     await createCharacterProfile(
@@ -51,12 +53,18 @@ describe("orchestration-service runtime execution", () => {
       db
     );
 
-    let capturedPrompt = "";
+    const calls: Array<{ prompt: string; agentId?: string; previousCount: number }> = [];
     setAgentRuntimeForTesting({
       async runTurn(input) {
-        capturedPrompt = input.prompt;
+        calls.push({
+          prompt: input.prompt,
+          agentId: input.fileAgent?.id,
+          previousCount: input.previousStepOutputs?.length ?? 0
+        });
         return {
-          outputText: "莉莉儿抬起蓝眼看向你，轻声回应。",
+          outputText: input.fileAgent?.id === "plot-designer"
+            ? "剧情计划：莉莉儿察觉玩家进入小院，先保持警惕再试探。"
+            : "莉莉儿抬起蓝眼看向你，轻声回应。",
           runtimeName: "fake-runtime",
           modelProvider: "test",
           modelName: "fake"
@@ -76,16 +84,21 @@ describe("orchestration-service runtime execution", () => {
     const traces = await db.select().from(workflowTraces);
     const steps = await db.select().from(workflowTraceSteps);
     expect(result.narrativeResponseText).toBe("莉莉儿抬起蓝眼看向你，轻声回应。");
-    expect(capturedPrompt).toContain("我走进小院。");
-    expect(capturedPrompt).toContain("莉莉儿");
-    expect(capturedPrompt).toContain("阿尔卡迪亚大陆");
+    expect(calls.map((call) => call.agentId)).toEqual(["plot-designer", "literary-writer"]);
+    expect(calls[0]?.prompt).toContain("我走进小院。");
+    expect(calls[0]?.prompt).toContain("莉莉儿");
+    expect(calls[0]?.prompt).toContain("阿尔卡迪亚大陆");
+    expect(calls[1]?.previousCount).toBe(1);
+    expect(calls[1]?.prompt).toContain("剧情计划：莉莉儿察觉玩家进入小院");
     expect(traces).toEqual([
       expect.objectContaining({
         status: "succeeded",
         finalOutputText: "莉莉儿抬起蓝眼看向你，轻声回应。"
       })
     ]);
+    expect(steps).toHaveLength(2);
     expect(steps[0]?.inputPayloadJson).toContain("fake-runtime");
     expect(steps[0]?.inputPayloadJson).toContain("我走进小院。");
+    expect(steps[1]?.outputText).toBe("莉莉儿抬起蓝眼看向你，轻声回应。");
   });
 });

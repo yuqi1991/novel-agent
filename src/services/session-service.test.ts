@@ -35,6 +35,7 @@ let tempDir: string;
 
 async function createTestDatabase() {
   tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "novel-agent-session-test-"));
+  process.env.NOVEL_AGENT_USER_DATA_DIR = path.join(tempDir, "user_data");
   const db = createDatabase(`file:${path.join(tempDir, "test.db")}`);
   await migrate(db, { migrationsFolder: "drizzle" });
   return db;
@@ -42,6 +43,7 @@ async function createTestDatabase() {
 
 afterEach(() => {
   setAgentRuntimeForTesting(null);
+  delete process.env.NOVEL_AGENT_USER_DATA_DIR;
   if (tempDir) {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }
@@ -71,6 +73,8 @@ describe("session-service", () => {
       expect.objectContaining({ id: firstSession.id, storyId: story.id, title: "Harbor Route" }),
       expect.objectContaining({ id: secondSession.id, storyId: story.id, title: "Mountain Route" })
     ]);
+    expect(fs.existsSync(path.join(tempDir, "user_data", "stories", story.id, "saves", firstSession.id, "wiki"))).toBe(true);
+    expect(fs.existsSync(path.join(tempDir, "user_data", "stories", story.id, "saves", secondSession.id, "wiki"))).toBe(true);
     expect(firstTranscript.positions).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -182,6 +186,11 @@ describe("session-service", () => {
       expect.objectContaining({
         workflowTraceId: result.workflowTrace.id,
         orderIndex: 0,
+        status: "succeeded"
+      }),
+      expect.objectContaining({
+        workflowTraceId: result.workflowTrace.id,
+        orderIndex: 1,
         status: "succeeded"
       })
     ]);
