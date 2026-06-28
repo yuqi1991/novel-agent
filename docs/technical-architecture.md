@@ -41,14 +41,14 @@ The UI should be work-focused rather than landing-page oriented. The primary sur
 
 ### Persistence
 
-Use `user_data/` as the repo-local runtime data root. Use SQLite as the authoritative local structured store, located by default at `user_data/novel-agent.db`. Use Drizzle ORM with generated migrations as the recommended TypeScript database layer.
+Use git-ignored `user_data/` as the repo-local runtime data root. Use SQLite as the authoritative local structured store, located by default at `user_data/novel-agent.db`. Use Drizzle ORM with generated migrations as the recommended TypeScript database layer.
 
 Rationale:
 
 - The domain needs relational integrity for Stories, Play Sessions, Conversation Positions, Reply Variants, Selected Paths, Wiki Snapshots, Imported Assets, and Orchestration Configurations.
 - Drizzle keeps schema definitions close to TypeScript while still producing explicit migrations.
 - JSON fields can be used for flexible imported payloads, skill configuration, model configuration, and provider-specific metadata.
-- Runtime config, provider model definitions, provider auth, agent prompt files, and agent skills live under `user_data/` so the app does not depend on `~/.pi/agent`.
+- Runtime config, provider model definitions, provider auth, agent prompt files, and agent skills live under local ignored `user_data/` so the app does not depend on `~/.pi/agent`.
 - Creating a Story or Play Session also creates the corresponding repo-local directories under `user_data/stories/<story-id>/saves/<session-id>/wiki/`. In this slice, Progress Wiki document records are still stored in SQLite; the directory layout is reserved for the file-backed wiki writer.
 
 The MVP `user_data/` layout is:

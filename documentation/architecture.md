@@ -4,7 +4,7 @@
 
 Novel Agent is a local single-user Web UI for single-player text role-play. A user can import or create stories, manage play sessions under each story, chat inside a session, reroll the latest system response, fork older positions into new sessions, and inspect workflow traces.
 
-The app is currently an MVP. SQLite is the authoritative structured store. `user_data/` is the repo-local runtime data root for database files, provider configuration, agent files, and ignored mutable story/save folders.
+The app is currently an MVP. SQLite is the authoritative structured store. Git-ignored `user_data/` is the repo-local runtime data root for database files, provider configuration, agent files, and mutable story/save folders.
 
 ## Tech Stack
 
@@ -16,7 +16,7 @@ The app is currently an MVP. SQLite is the authoritative structured store. `user
 | ORM/migrations | Drizzle ORM and generated migrations in `drizzle/` |
 | Tests | Vitest service tests, Playwright e2e tests |
 | Agent runtime | `@earendil-works/pi-coding-agent` adapter plus deterministic stub runtime |
-| Runtime config | `user_data/config.yaml`, `user_data/agents/*`, `user_data/providers/*` |
+| Runtime config | Local ignored `user_data/config.yaml`, `user_data/agents/*`, `user_data/providers/*` |
 
 ## Major Modules
 
@@ -51,7 +51,7 @@ user_data/
   lorebooks/
 ```
 
-Tracked files under `user_data/` are seed config and sample agents. Databases, auth, stories, and lorebooks are ignored.
+All files under `user_data/` are ignored by git. The runtime creates default local templates when missing.
 
 ## Request And State Flow
 
@@ -70,7 +70,7 @@ There is no account system and no network auth boundary. Browser forms submit to
 ## Known Risks And Assumptions
 
 - No account system: all data is local and owned by one user.
-- Provider credentials are local secrets in `user_data/providers/auth.json` or provider env vars; the Web UI does not manage secrets.
+- Provider credentials are local secrets in git-ignored `user_data/providers/auth.json` or provider env vars; the Web UI does not manage secrets.
 - Progress Wiki content is currently stored in SQLite. The filesystem wiki directory is created but not yet the source of wiki document content.
 - The active play workflow is file-defined under `user_data/config.yaml`; UI orchestration configuration remains useful for management and future selection, but not yet the primary runtime selector.
 - `next build` may emit a Turbopack dynamic filesystem tracing warning from runtime config loading. The build and e2e tests pass.
@@ -83,6 +83,7 @@ There is no account system and no network auth boundary. Browser forms submit to
 - `CONTRIBUTING.md` - contribution workflow
 - `docs/technical-architecture.md` - deeper target architecture
 - `docs/novel-agent-design.md` - product/domain design notes
+- `docs/glossary.md` - domain terminology
 - `documentation/flows.md` - side-effect and trust-boundary flows
 - `documentation/permissions.md` - permissions and resource operation matrix
 - `documentation/variables.md` - variables and secrets

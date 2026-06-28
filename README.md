@@ -2,7 +2,7 @@
 
 Novel Agent is a local single-player, text role-play game framework. It imports SillyTavern character cards and world books, stores multiple stories and play sessions, and runs each player turn through a configurable multi-agent writing workflow.
 
-The current MVP is a Next.js Web UI backed by SQLite. The default play workflow is file-defined under `user_data/` and runs two sample agents in sequence:
+The current MVP is a Next.js Web UI backed by SQLite. The default play workflow is file-defined under local git-ignored `user_data/` and runs two sample agents in sequence:
 
 1. `plot-designer` plans the next beat.
 2. `literary-writer` writes the final Chinese RP response.
@@ -14,7 +14,7 @@ The current MVP is a Next.js Web UI backed by SQLite. The default play workflow 
 - Story workspace with chat, sessions, reroll variants, forks, story material, save manager, progress wiki panel, orchestration panels, and trace viewer.
 - SQLite is the authoritative structured store.
 - Agent runtime defaults to Pi outside tests and deterministic stub in tests.
-- Agent definitions, skills, provider models, provider auth, and runtime data live under `user_data/`.
+- Agent definitions, skills, provider models, provider auth, and runtime data live under local `user_data/`, which is intentionally ignored by git.
 
 ## Requirements
 
@@ -49,7 +49,20 @@ For real LLM-backed play, set:
 NOVEL_AGENT_RUNTIME=pi
 ```
 
-Then put provider credentials in `user_data/providers/auth.json` or use provider environment variables supported by Pi. The bundled `user_data/providers/models.json` contains a DeepSeek OpenAI-compatible model entry, and `user_data/config.yaml` defaults to `deepseek/deepseek-v4-flash`.
+Then configure provider credentials with one local-only option:
+
+1. Put credentials in `user_data/providers/auth.json`.
+2. Set provider environment variables supported by Pi, such as `DEEPSEEK_API_KEY`.
+
+`user_data/` is ignored by git. On first runtime load, the app creates a default `user_data/config.yaml`, `user_data/providers/models.json`, two sample agents, and an empty `user_data/providers/auth.json`.
+
+For DeepSeek, the auth file shape is:
+
+```json
+{
+  "deepseek": { "type": "api_key", "key": "sk-..." }
+}
+```
 
 ## Common Commands
 
@@ -78,17 +91,10 @@ tests/fixtures/          Import fixtures
 drizzle/                 Generated migrations
 docs/                    PRD, architecture notes, ADRs, issue slices
 documentation/           Shipping/audit handoff docs for reviewers and coding agents
-user_data/               Repo-local runtime config and sample agent definitions
+user_data/               Ignored local runtime config, secrets, sample agents, and app data
 ```
 
-Mutable local data is ignored by git:
-
-- `user_data/*.db`
-- `user_data/providers/auth.json`
-- `user_data/stories/`
-- `user_data/lorebooks/`
-
-Tracked `user_data` files are seed configuration and sample agents only.
+All `user_data/` contents are ignored by git. The runtime creates default local templates when missing, and users can edit those files for their own providers, agents, skills, and workflows.
 
 ## User Data Layout
 
@@ -97,16 +103,16 @@ user_data/
   config.yaml
   providers/
     models.json
-    auth.json              # ignored, local secret material
+    auth.json              # local secret material
   agents/
     <agent-id>/
       agent.yaml
       system.md
       skills/<skill-id>/SKILL.md
       prompts/
-  stories/                 # ignored runtime story/save folders
-  lorebooks/               # ignored runtime lorebook files
-  novel-agent.db           # ignored SQLite database
+  stories/                 # runtime story/save folders
+  lorebooks/               # runtime lorebook files
+  novel-agent.db           # SQLite database
 ```
 
 Skills follow the standard `SKILL.md` entrypoint format:
@@ -134,6 +140,7 @@ Known build note: `next build` currently succeeds but may emit a Turbopack warni
 
 - [MVP PRD](docs/mvp-prd.md)
 - [Design Notes](docs/novel-agent-design.md)
+- [Glossary](docs/glossary.md)
 - [Technical Architecture](docs/technical-architecture.md)
 - [Pi Runtime Setup](docs/pi-runtime-setup.md)
 - [Issue Slices](docs/issues/mvp-issue-slices.md)

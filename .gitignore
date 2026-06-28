@@ -5,12 +5,11 @@ coverage
 playwright-report
 test-results
 data/
-user_data/*.db
-user_data/*.db-*
-user_data/providers/auth.json
-user_data/stories/
-user_data/lorebooks/
+user_data/
 .env
 .env.local
 .env.*.local
 *.tsbuildinfo
+
+# local manual import fixture
+莉莉儿.json

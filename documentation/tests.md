@@ -16,7 +16,7 @@
 | SillyTavern import | Character/world JSON converts to internal model | Imported character/world entries persist | `src/services/story-creation-service.test.ts`, `src/services/sillytavern-import-service.test.ts`, `tests/e2e/sillytavern-import.spec.ts` | Existing unit/e2e |
 | Context assembly | Context includes recent conversation/material/wiki | Context pack shape matches expectations | `src/services/context-assembly-service.test.ts` | Existing unit/integration |
 | Agent capabilities | Subagents are read-only; story material proposals are gated | Invalid mutation surfaces are rejected | `src/services/agent-capability-service.test.ts` | Existing unit |
-| Runtime config | Repo-local user_data config loads sample agents and SKILL.md | Workflow agents resolve from config | `src/services/agent-runtime/runtime-config.test.ts` | Existing unit |
+| Runtime config | Repo-local ignored user_data config generates and loads sample agents and SKILL.md | Workflow agents resolve from config | `src/services/agent-runtime/runtime-config.test.ts` | Existing unit |
 | Orchestration | Multi-agent workflow passes upstream output downstream | Two agent steps run in order | `src/services/orchestration-service.test.ts` | Existing unit/integration |
 | Trace viewer | Trace details are visible after play turn | Runtime payload can be inspected | `src/services/trace-service.test.ts`, `tests/e2e/trace-viewer.spec.ts` | Existing unit/e2e |
 | UI shell | Story library and panels render | Main app surfaces are reachable | `tests/e2e/story-library.spec.ts`, other e2e specs | Existing e2e |

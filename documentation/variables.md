@@ -18,10 +18,10 @@
 
 | File | Tracked | Purpose | Risk |
 | --- | --- | --- | --- |
-| `user_data/config.yaml` | Yes | Default runtime/provider/workflow config | Can route play to different agents/providers |
-| `user_data/providers/models.json` | Yes | Provider/model registry seed | Can define external provider endpoints |
+| `user_data/config.yaml` | No | Default runtime/provider/workflow config | Can route play to different agents/providers |
+| `user_data/providers/models.json` | No | Provider/model registry seed | Can define external provider endpoints |
 | `user_data/providers/auth.json` | No | Provider credentials | Secret; never commit |
-| `user_data/agents/*` | Yes for samples | Agent system prompts, skill directories, workflow resources | Prompt changes affect generation behavior |
+| `user_data/agents/*` | No | Agent system prompts, skill directories, workflow resources | Prompt changes affect generation behavior |
 | `user_data/*.db` | No | Local SQLite database | Contains imported content and chats |
 | `user_data/stories/` | No | Runtime story/save/wiki directories | Contains user play data as file-backed features grow |
 
@@ -33,6 +33,6 @@ No provider secrets are intentionally bundled client-side. Provider auth is read
 
 - Keep `NOVEL_AGENT_RUNTIME=stub` for demos that must avoid external provider calls.
 - Use `NOVEL_AGENT_RUNTIME=pi` only after configuring provider credentials intentionally.
-- Confirm `user_data/providers/auth.json` is ignored and not staged.
+- Confirm `user_data/` is ignored and not staged.
 - Confirm imported private character cards are not committed.
 - Review trace visibility before sharing a local database; traces include prompts and context packs.

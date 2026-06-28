@@ -129,6 +129,6 @@ Because the repository currently contains only planning documents, there is no p
 
 ## Further Notes
 
-The design source of truth is `docs/novel-agent-design.md`. Domain vocabulary is maintained in `CONTEXT.md`. The SQLite storage decision is captured in `docs/adr/0001-sqlite-primary-storage.md`.
+The design source of truth is `docs/novel-agent-design.md`. Domain vocabulary is maintained in `docs/glossary.md`. The SQLite storage decision is captured in `docs/adr/0001-sqlite-primary-storage.md`.
 
 A later implementation plan should split this PRD into vertical slices rather than building all infrastructure first. A good first slice is: create a Story, create a Play Session, configure a minimal one-agent Orchestration Configuration, send one player message, generate one Narrative Response, persist it as a Reply Variant, and show a Workflow Trace.

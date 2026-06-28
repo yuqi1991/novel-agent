@@ -131,7 +131,7 @@ The MVP Web UI contains these workspaces:
 
 SQLite is the primary local store. It stores Stories, Play Sessions, Conversation Logs, Reply Variants, Selected Paths, Wiki Snapshots, Story Material, Imported Assets, Orchestration Configurations, and Workflow Traces.
 
-All local runtime configuration and mutable runtime data lives under `user_data/` in the repo. The default SQLite path is `user_data/novel-agent.db`; provider auth/model config is under `user_data/providers/`; file-defined agents and skills are under `user_data/agents/`. Story and save directories are created under `user_data/stories/<story-id>/saves/<session-id>/wiki/`; current Progress Wiki document content remains SQLite-backed until the file-backed wiki writer is added.
+All local runtime configuration and mutable runtime data lives under git-ignored `user_data/` in the repo. The default SQLite path is `user_data/novel-agent.db`; provider auth/model config is under `user_data/providers/`; file-defined agents and skills are under `user_data/agents/`. Story and save directories are created under `user_data/stories/<story-id>/saves/<session-id>/wiki/`; current Progress Wiki document content remains SQLite-backed until the file-backed wiki writer is added.
 
 JSONL may be used for import, export, backup, and interchange, but not as the authoritative application database. This is recorded in ADR 0001.
 

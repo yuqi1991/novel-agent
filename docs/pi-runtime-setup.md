@@ -4,7 +4,7 @@ Novel Agent uses `@earendil-works/pi-coding-agent` as the default runtime outsid
 
 ## User Data Layout
 
-The app creates this layout on first runtime load:
+The app creates this local, git-ignored layout on first runtime load:
 
 ```text
 user_data/
@@ -28,11 +28,25 @@ user_data/
   lorebooks/
 ```
 
-Tracked examples include `config.yaml`, `providers/models.json`, and the two sample agents. Runtime secrets and mutable play data are ignored by git.
+All `user_data/` contents are ignored by git. Treat these files as local user configuration and mutable play data.
 
 ## Provider Auth
 
-Put provider credentials in `user_data/providers/auth.json`, or use provider environment variables supported by Pi. The app does not store provider API keys in SQLite or the Web UI.
+Put provider credentials in `user_data/providers/auth.json`, or use provider environment variables supported by Pi. The app does not store provider API keys in SQLite or the Web UI, and `user_data/` must stay ignored by git.
+
+For DeepSeek:
+
+```json
+{
+  "deepseek": { "type": "api_key", "key": "sk-..." }
+}
+```
+
+Equivalent environment variable:
+
+```bash
+DEEPSEEK_API_KEY=sk-...
+```
 
 For the current local MVP, `user_data/config.yaml` defaults to `deepseek/deepseek-v4-flash`. `user_data/providers/models.json` already contains the DeepSeek OpenAI-compatible provider entry, so no global Pi config is required.
 
@@ -72,4 +86,4 @@ Useful environment overrides:
 - `NOVEL_AGENT_PI_MODELS_PATH=/path/to/models.json`
 - `NOVEL_AGENT_PI_NO_TOOLS=true|false`
 
-Automated tests run with the deterministic stub runtime. Manual `npm run dev` uses Pi by default.
+Automated tests run with the deterministic stub runtime. Manual `npm run dev` uses Pi by default only when `NOVEL_AGENT_RUNTIME` is unset or set to `pi`; the provided `.env.example` uses `stub` for safe local startup without provider credentials.
