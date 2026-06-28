@@ -4,8 +4,7 @@ out
 coverage
 playwright-report
 test-results
-data/*.db
-data/*.db-*
+data/
 user_data/*.db
 user_data/*.db-*
 user_data/providers/auth.json
@@ -13,4 +12,5 @@ user_data/stories/
 user_data/lorebooks/
 .env
 .env.local
+.env.*.local
 *.tsbuildinfo

@@ -5,6 +5,6 @@ export default defineConfig({
   out: "./drizzle",
   dialect: "sqlite",
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? "file:./data/novel-agent.db"
+    url: process.env.DATABASE_URL ?? "file:./user_data/novel-agent.db"
   }
 });
