@@ -12,6 +12,7 @@ import {
 import { newId } from "@/domain/ids";
 import {
   convertSillyTavernCharacterPayload,
+  convertSillyTavernCharacterWorldPayload,
   convertSillyTavernWorldPayload,
   parseSillyTavernJsonPayload
 } from "./sillytavern-import-service";
@@ -69,6 +70,7 @@ export function parseSillyTavernStoryDraft(input: {
 
   if (input.sourceType === "character_card") {
     const character = convertSillyTavernCharacterPayload(payload);
+    const entries = convertSillyTavernCharacterWorldPayload(payload);
     return {
       title: character.name,
       description: "",
@@ -82,7 +84,10 @@ export function parseSillyTavernStoryDraft(input: {
           importedAssetIndex: 0
         }
       ],
-      worldEntries: []
+      worldEntries: entries.map((entry) => ({
+        ...entry,
+        importedAssetIndex: 0
+      }))
     };
   }
 

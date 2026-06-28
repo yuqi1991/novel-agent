@@ -91,6 +91,35 @@ export function convertSillyTavernCharacterPayload(payload: unknown) {
   };
 }
 
+export function convertSillyTavernCharacterWorldPayload(payload: unknown) {
+  const character = unwrapCharacterPayload(payload);
+  if (!character) {
+    throw new Error("Character card JSON must be an object");
+  }
+
+  const books = [
+    character.character_book,
+    asRecord(character.extensions)?.character_book,
+    asRecord(character.extensions)?.world_book,
+    asRecord(character.extensions)?.lorebook
+  ].filter(Boolean);
+
+  const entries = books.flatMap((book) => {
+    try {
+      return convertSillyTavernWorldPayload(book);
+    } catch {
+      return [];
+    }
+  });
+
+  return entries.filter(
+    (entry, index, allEntries) =>
+      allEntries.findIndex(
+        (candidate) => candidate.title === entry.title && candidate.body === entry.body
+      ) === index
+  );
+}
+
 function unwrapWorldPayload(payload: unknown) {
   const root = asRecord(payload);
   const data = asRecord(root?.data);
@@ -184,7 +213,9 @@ export async function importSillyTavernJson(input: SillyTavernImportInput, datab
 
     if (parsed.sourceType === "character_card") {
       const character = convertSillyTavernCharacterPayload(payload);
+      const entries = convertSillyTavernCharacterWorldPayload(payload);
       const characterProfileId = newId("character");
+      const worldEntryIds = entries.map(() => newId("world"));
 
       await tx.insert(characterProfiles).values({
         id: characterProfileId,
@@ -196,10 +227,25 @@ export async function importSillyTavernJson(input: SillyTavernImportInput, datab
         metadataJson: character.metadataJson
       });
 
+      if (entries.length > 0) {
+        await tx.insert(worldEntries).values(
+          entries.map((entry, index) => ({
+            id: worldEntryIds[index],
+            storyId: parsed.storyId,
+            importedAssetId: assetId,
+            title: entry.title,
+            body: entry.body,
+            inclusionMode: entry.inclusionMode,
+            triggerConfigJson: entry.triggerConfigJson,
+            tagsJson: entry.tagsJson
+          }))
+        );
+      }
+
       return {
         importedAssetId: assetId,
         characterProfileIds: [characterProfileId],
-        worldEntryIds: []
+        worldEntryIds
       };
     }
 

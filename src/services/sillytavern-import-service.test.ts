@@ -82,6 +82,22 @@ describe("sillytavern-import-service", () => {
         name: "Mira Vale"
       })
     ]);
+    expect(material.worldEntries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          importedAssetId: assets[0]?.id,
+          title: "Archive Wardens",
+          body: "Archive Wardens bind drowned relics with brass bells.",
+          inclusionMode: "always"
+        }),
+        expect.objectContaining({
+          importedAssetId: assets[0]?.id,
+          title: "Storm Tide",
+          body: "The storm tide opens sealed rooms below the Bell Reef.",
+          inclusionMode: "triggered"
+        })
+      ])
+    );
   });
 
   it("preserves an Imported Asset and converts SillyTavern world entries into World Entries", async () => {

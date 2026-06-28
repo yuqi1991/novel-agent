@@ -8,22 +8,28 @@ test("Progress Wiki Editor creates, edits, and snapshots session memory", async 
 
   await expect(page.getByRole("heading", { name: storyTitle })).toBeVisible();
 
-  const wikiEditor = await openPanel(page, "记忆 Wiki");
-  await expect(wikiEditor.getByRole("heading", { name: "记忆 Wiki" })).toBeVisible();
+  const saveManager = await openPanel(page, "存档管理");
+  await expect(saveManager.getByRole("heading", { name: "存档管理" })).toBeVisible();
+  await expect(saveManager.getByRole("region", { name: "存档聊天记录" })).toBeVisible();
 
-  const createForm = wikiEditor.getByRole("heading", { name: "创建记忆文档" }).locator("..");
-  await createForm.getByLabel("标题").fill("Current Plot State");
+  const wikiEditor = saveManager.getByRole("region", { name: "记忆 Wiki" });
+  const createForm = wikiEditor.getByRole("button", { name: "创建文件" }).locator("..");
+  await createForm.getByLabel("路径 / 文件名").fill("剧情/Current Plot State.md");
   await createForm.getByLabel("内容").fill("The player found a copper key.");
-  await createForm.getByRole("button", { name: "创建文档" }).click();
+  await createForm.getByRole("button", { name: "创建文件" }).click();
 
-  const documents = wikiEditor.getByRole("region", { name: "记忆文档" });
-  await expect(documents.getByLabel("标题")).toHaveValue("Current Plot State");
-  await documents.getByLabel("内容").fill("The player hid the copper key under the stair.");
-  await documents.getByRole("button", { name: "保存文档" }).click();
+  const browser = page.getByRole("navigation", { name: "Wiki 文件浏览器" });
+  await expect(browser.getByText("剧情")).toBeVisible();
+  await expect(browser.getByRole("link", { name: "Current Plot State.md" })).toBeVisible();
 
-  await expect(documents.locator("textarea")).toHaveValue("The player hid the copper key under the stair.");
+  const editor = page.getByLabel("Wiki 文件编辑器");
+  await expect(editor.getByLabel("路径 / 文件名")).toHaveValue("剧情/Current Plot State.md");
+  await editor.getByLabel("内容").fill("The player hid the copper key under the stair.");
+  await editor.getByRole("button", { name: "保存文件" }).click();
 
-  const snapshots = wikiEditor.getByRole("region", { name: "记忆快照" });
+  await expect(editor.locator("textarea")).toHaveValue("The player hid the copper key under the stair.");
+
+  const snapshots = saveManager.getByRole("region", { name: "记忆快照" });
   await snapshots.getByLabel("记忆边界楼层").fill("10");
   await snapshots.getByRole("button", { name: "创建快照" }).click();
 
@@ -31,6 +37,6 @@ test("Progress Wiki Editor creates, edits, and snapshots session memory", async 
 
   await page.reload();
 
-  await expect(page.getByRole("region", { name: "记忆文档" }).getByLabel("标题")).toHaveValue("Current Plot State");
+  await expect(page.getByLabel("Wiki 文件编辑器").getByLabel("路径 / 文件名")).toHaveValue("剧情/Current Plot State.md");
   await expect(page.getByRole("region", { name: "记忆快照" }).getByText("边界 10")).toBeVisible();
 });

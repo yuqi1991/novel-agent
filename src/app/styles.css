@@ -188,12 +188,23 @@ h1 {
   line-height: 1.6;
 }
 
-.session-switcher {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-  max-width: 420px;
+.current-session-card {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  min-width: 180px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.current-session-card strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.current-session-card a {
+  color: var(--accent-strong);
+  font-weight: 800;
 }
 
 .chat-transcript {
@@ -403,10 +414,12 @@ label {
 
 .story-list,
 .material-list,
+.save-list,
 .agent-list,
 .tool-list,
 .wiki-document-list,
 .snapshot-list,
+.save-transcript-list,
 .trace-list,
 .trace-step-list {
   list-style: none;
@@ -417,10 +430,12 @@ label {
 }
 
 .story-list a,
+.save-link,
 .material-item,
 .wiki-document-item,
 .trace-item,
 .snapshot-list li,
+.save-transcript-list li,
 .tool-list li,
 .agent-list li {
   display: grid;
@@ -432,9 +447,11 @@ label {
 }
 
 .story-list span,
+.save-link span,
 .material-item p,
 .trace-output,
 .trace-header p,
+.save-transcript-list p,
 .snapshot-list span,
 .tool-list span,
 .agent-list span {
@@ -442,6 +459,77 @@ label {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.save-link.active {
+  border-color: var(--accent);
+  background: #2b261d;
+}
+
+.save-link.active strong {
+  color: var(--accent-strong);
+}
+
+.save-transcript-list p {
+  white-space: pre-wrap;
+}
+
+.wiki-manager {
+  display: grid;
+  gap: 12px;
+}
+
+.wiki-browser-editor {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.85fr) minmax(0, 1.55fr);
+  gap: 12px;
+  min-height: 360px;
+}
+
+.wiki-file-browser,
+.wiki-editor-panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel-2);
+  padding: 10px;
+}
+
+.wiki-file-browser {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.wiki-folder-row,
+.wiki-file-row {
+  min-height: 30px;
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-size: 13px;
+}
+
+.wiki-folder-row {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.wiki-file-row {
+  border: 1px solid transparent;
+  color: var(--ink);
+}
+
+.wiki-file-row:hover,
+.wiki-file-row.active {
+  border-color: var(--accent);
+  background: #2b261d;
+  color: var(--accent-strong);
+}
+
+.wiki-editor-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
 }
 
 .material-summary {

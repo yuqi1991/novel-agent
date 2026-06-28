@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { createStory } from "./helpers";
+import { createStory, openPanel } from "./helpers";
 
 test("Session Fork copies only the selected transcript prefix into a new Play Session", async ({ page }) => {
   const storyTitle = `Fork Story ${Date.now()}`;
@@ -25,11 +25,12 @@ test("Session Fork copies only the selected transcript prefix into a new Play Se
     .first();
   await firstResponseItem.getByRole("button", { name: "分叉" }).click();
 
-  const forkLink = page.getByRole("link", { name: /从第 2 楼分叉/ });
+  const saveManager = await openPanel(page, "存档管理");
+  const forkLink = saveManager.getByRole("link", { name: /从第 2 楼分叉/ });
   await expect(forkLink).toBeVisible();
   await forkLink.click();
 
-  await expect(page.getByRole("link", { name: "从第 2 楼分叉" })).toBeVisible();
+  await expect(page.getByLabel("当前存档").getByText("从第 2 楼分叉")).toBeVisible();
   await expect(chat.getByText(firstMessage, { exact: true })).toBeVisible();
   await expect(chat.getByText(secondMessage, { exact: true })).not.toBeVisible();
   await expect(chat.locator(".chat-message")).toHaveCount(2);

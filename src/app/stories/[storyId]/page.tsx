@@ -54,7 +54,7 @@ import { listWorkflowTracesForSession } from "@/services/trace-service";
 type StoryMaterial = Awaited<ReturnType<typeof listStoryMaterial>>;
 type CharacterProfile = StoryMaterial["characterProfiles"][number];
 type WorldEntry = StoryMaterial["worldEntries"][number];
-type PanelKey = "storyLibrary" | "worldBook" | "agentProfiles" | "orchestration" | "wiki" | "traces";
+type PanelKey = "storyLibrary" | "worldBook" | "agentProfiles" | "orchestration" | "saves" | "traces";
 type UnknownRecord = Record<string, unknown>;
 
 const roleLabels = {
@@ -75,7 +75,7 @@ const panelLabels: Record<PanelKey, string> = {
   worldBook: "世界书",
   agentProfiles: "Agent 管理",
   orchestration: "Agent 编排",
-  wiki: "记忆 Wiki",
+  saves: "存档管理",
   traces: "运行记录"
 };
 
@@ -200,18 +200,39 @@ function panelHref(storyId: string, panel: PanelKey, sessionId: string) {
   return `/stories/${storyId}?${params.toString()}`;
 }
 
+function storyQueryHref(
+  storyId: string,
+  values: { sessionId?: string; panel?: PanelKey; wikiDoc?: string } = {}
+) {
+  const params = new URLSearchParams();
+  if (values.sessionId) {
+    params.set("sessionId", values.sessionId);
+  }
+  if (values.panel) {
+    params.set("panel", values.panel);
+  }
+  if (values.wikiDoc) {
+    params.set("wikiDoc", values.wikiDoc);
+  }
+  const query = params.toString();
+  return query ? `/stories/${storyId}?${query}` : `/stories/${storyId}`;
+}
+
 export default async function StoryChatPage({
   params,
   searchParams
 }: {
   params: Promise<{ storyId: string }>;
-  searchParams?: Promise<{ sessionId?: string | string[]; panel?: string | string[] }>;
+  searchParams?: Promise<{ sessionId?: string | string[]; panel?: string | string[]; wikiDoc?: string | string[] }>;
 }) {
   const { storyId } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const querySessionId = Array.isArray(resolvedSearchParams.sessionId)
     ? resolvedSearchParams.sessionId[0]
     : resolvedSearchParams.sessionId;
+  const activeWikiDocumentId = Array.isArray(resolvedSearchParams.wikiDoc)
+    ? resolvedSearchParams.wikiDoc[0]
+    : resolvedSearchParams.wikiDoc;
   const activePanel = getPanel(resolvedSearchParams.panel);
   const story = await getStory(storyId);
 
@@ -288,24 +309,10 @@ export default async function StoryChatPage({
               <p className="eyebrow">当前故事</p>
               <h1>{story.title}</h1>
             </div>
-            <div className="session-switcher" aria-label="存档切换">
-              {playSessions.map((session) => {
-                const sessionId = getSessionId(session);
-                return (
-                  <Link
-                    key={sessionId}
-                    href={`/stories/${storyId}?sessionId=${encodeURIComponent(sessionId)}`}
-                    className={sessionId === activeSessionId ? "session-pill active" : "session-pill"}
-                  >
-                    {getSessionTitle(session)}
-                  </Link>
-                );
-              })}
-              <form action={createPlaySessionAction}>
-                <input type="hidden" name="storyId" value={storyId} />
-                <input type="hidden" name="title" value="新存档" />
-                <button className="secondary" type="submit">新存档</button>
-              </form>
+            <div className="current-session-card" aria-label="当前存档">
+              <span>当前存档</span>
+              <strong>{getSessionTitle(activeSession)}</strong>
+              <Link href={panelHref(storyId, "saves", activeSessionId)}>管理存档</Link>
             </div>
           </div>
 
@@ -401,8 +408,16 @@ export default async function StoryChatPage({
                 externalTools={externalToolConfigurations}
               />
             ) : null}
-            {activePanel === "wiki" ? (
-              <WikiPanel storyId={storyId} sessionId={activeSessionId} progressWiki={progressWiki} />
+            {activePanel === "saves" ? (
+              <SaveManagerPanel
+                storyId={storyId}
+                activeSessionId={activeSessionId}
+                activeSessionTitle={getSessionTitle(activeSession)}
+                activeWikiDocumentId={activeWikiDocumentId}
+                playSessions={playSessions}
+                transcriptItems={transcriptItems}
+                progressWiki={progressWiki}
+              />
             ) : null}
             {activePanel === "traces" ? (
               <TracePanel activeSessionTitle={getSessionTitle(activeSession)} workflowTraces={workflowTraces} />
@@ -679,49 +694,76 @@ function OrchestrationPanel({
   );
 }
 
-function WikiPanel({ storyId, sessionId, progressWiki }: { storyId: string; sessionId: string; progressWiki: Awaited<ReturnType<typeof listProgressWiki>> }) {
+function SaveManagerPanel({
+  storyId,
+  activeSessionId,
+  activeSessionTitle,
+  activeWikiDocumentId,
+  playSessions,
+  transcriptItems,
+  progressWiki
+}: {
+  storyId: string;
+  activeSessionId: string;
+  activeSessionTitle: string;
+  activeWikiDocumentId?: string;
+  playSessions: unknown[];
+  transcriptItems: unknown[];
+  progressWiki: Awaited<ReturnType<typeof listProgressWiki>>;
+}) {
   return (
     <div className="drawer-stack">
-      <form action={createProgressWikiDocumentAction} className="panel form-panel">
-        <input type="hidden" name="storyId" value={storyId} />
-        <input type="hidden" name="sessionId" value={sessionId} />
-        <h3>创建记忆文档</h3>
-        <label><span>标题</span><input name="title" required /></label>
-        <label><span>类型</span><input name="documentType" defaultValue="note" /></label>
-        <label><span>内容</span><textarea name="body" /></label>
-        <label><span>标签 JSON</span><input name="tagsJson" defaultValue="[]" /></label>
-        <button type="submit">创建文档</button>
-      </form>
-      <section className="panel list-panel" aria-label="记忆文档">
-        <div className="panel-heading"><h3>文档</h3><span>{progressWiki.documents.length}</span></div>
-        <ul className="wiki-document-list">
-          {progressWiki.documents.map((document) => (
-            <li key={document.id} className="wiki-document-item">
-              <form action={updateProgressWikiDocumentAction} className="wiki-document-form">
-                <input type="hidden" name="storyId" value={storyId} />
-                <input type="hidden" name="sessionId" value={sessionId} />
-                <input type="hidden" name="documentId" value={document.id} />
-                <label><span>标题</span><input name="title" defaultValue={document.title} required /></label>
-                <label><span>类型</span><input name="documentType" defaultValue={document.documentType} /></label>
-                <label><span>内容</span><textarea name="body" defaultValue={document.body} /></label>
-                <label><span>标签 JSON</span><input name="tagsJson" defaultValue={document.tagsJson} /></label>
-                <button type="submit">保存文档</button>
-              </form>
-              <form action={deleteProgressWikiDocumentAction}>
-                <input type="hidden" name="storyId" value={storyId} />
-                <input type="hidden" name="sessionId" value={sessionId} />
-                <input type="hidden" name="documentId" value={document.id} />
-                <button className="secondary danger" type="submit">删除文档</button>
-              </form>
-            </li>
-          ))}
+      <section className="panel list-panel" aria-label="存档列表">
+        <div className="panel-heading"><h3>存档</h3><span>{playSessions.length}</span></div>
+        <ul className="save-list">
+          {playSessions.map((session) => {
+            const sessionId = getSessionId(session);
+            return (
+              <li key={sessionId}>
+                <Link
+                  href={storyQueryHref(storyId, { sessionId, panel: "saves" })}
+                  className={sessionId === activeSessionId ? "save-link active" : "save-link"}
+                >
+                  <strong>{getSessionTitle(session)}</strong>
+                  <span>{getSessionDate(session) || "暂无更新时间"}</span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
+        <form action={createPlaySessionAction} className="compact-form">
+          <input type="hidden" name="storyId" value={storyId} />
+          <label><span>新存档名称</span><input name="title" defaultValue="新存档" required /></label>
+          <button type="submit">创建存档</button>
+        </form>
       </section>
+
+      <section className="panel list-panel" aria-label="存档聊天记录">
+        <div className="panel-heading"><h3>{activeSessionTitle}</h3><span>{transcriptItems.length}</span></div>
+        {transcriptItems.length === 0 ? <p className="empty">这个存档还没有聊天记录。</p> : (
+          <ol className="save-transcript-list">
+            {transcriptItems.map((item, index) => (
+              <li key={`${getTranscriptKind(item)}-${index}`}>
+                <strong>{index + 1}. {getTranscriptKind(item)}</strong>
+                <p>{getTranscriptText(item) || "没有文本。"}</p>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
+
+      <WikiFileManager
+        storyId={storyId}
+        sessionId={activeSessionId}
+        activeWikiDocumentId={activeWikiDocumentId}
+        progressWiki={progressWiki}
+      />
+
       <section className="panel list-panel" aria-label="记忆快照">
         <div className="panel-heading"><h3>快照</h3><span>{progressWiki.snapshots.length}</span></div>
         <form action={createWikiSnapshotAction} className="compact-form">
           <input type="hidden" name="storyId" value={storyId} />
-          <input type="hidden" name="sessionId" value={sessionId} />
+          <input type="hidden" name="sessionId" value={activeSessionId} />
           <label><span>记忆边界楼层</span><input name="memoryBoundaryPosition" type="number" min="0" defaultValue="0" /></label>
           <button type="submit">创建快照</button>
         </form>
@@ -731,6 +773,111 @@ function WikiPanel({ storyId, sessionId, progressWiki }: { storyId: string; sess
       </section>
     </div>
   );
+}
+
+function WikiFileManager({
+  storyId,
+  sessionId,
+  activeWikiDocumentId,
+  progressWiki
+}: {
+  storyId: string;
+  sessionId: string;
+  activeWikiDocumentId?: string;
+  progressWiki: Awaited<ReturnType<typeof listProgressWiki>>;
+}) {
+  const activeDocument =
+    progressWiki.documents.find((document) => document.id === activeWikiDocumentId) ??
+    progressWiki.documents[0] ??
+    null;
+  const folders = getWikiFolderRows(progressWiki.documents);
+
+  return (
+    <section className="panel wiki-manager" aria-label="记忆 Wiki">
+      <div className="panel-heading"><h3>记忆 Wiki</h3><span>{progressWiki.documents.length}</span></div>
+      <form action={createProgressWikiDocumentAction} className="compact-form">
+        <input type="hidden" name="storyId" value={storyId} />
+        <input type="hidden" name="sessionId" value={sessionId} />
+        <label><span>路径 / 文件名</span><input name="title" placeholder="剧情/当前状态.md" required /></label>
+        <label><span>类型</span><input name="documentType" defaultValue="note" /></label>
+        <label><span>内容</span><textarea name="body" /></label>
+        <input type="hidden" name="tagsJson" value="[]" />
+        <button type="submit">创建文件</button>
+      </form>
+
+      <div className="wiki-browser-editor">
+        <nav className="wiki-file-browser" aria-label="Wiki 文件浏览器">
+          {progressWiki.documents.length === 0 ? <p className="empty">还没有 Wiki 文件。</p> : null}
+          {folders.map((folder) => (
+            <div key={folder.path} className="wiki-folder-row" style={{ paddingLeft: `${folder.depth * 14}px` }}>
+              {folder.name}
+            </div>
+          ))}
+          {progressWiki.documents.map((document) => {
+            const segments = getWikiPathSegments(document.title);
+            const fileName = segments.at(-1) ?? document.title;
+            return (
+              <Link
+                key={document.id}
+                href={storyQueryHref(storyId, { sessionId, panel: "saves", wikiDoc: document.id })}
+                className={document.id === activeDocument?.id ? "wiki-file-row active" : "wiki-file-row"}
+                style={{ paddingLeft: `${Math.max(0, segments.length - 1) * 14}px` }}
+              >
+                {fileName}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="wiki-editor-panel" aria-label="Wiki 文件编辑器">
+          {activeDocument ? (
+            <>
+              <form action={updateProgressWikiDocumentAction} className="wiki-document-form">
+                <input type="hidden" name="storyId" value={storyId} />
+                <input type="hidden" name="sessionId" value={sessionId} />
+                <input type="hidden" name="documentId" value={activeDocument.id} />
+                <label><span>路径 / 文件名</span><input name="title" defaultValue={activeDocument.title} required /></label>
+                <label><span>类型</span><input name="documentType" defaultValue={activeDocument.documentType} /></label>
+                <label><span>内容</span><textarea name="body" defaultValue={activeDocument.body} /></label>
+                <label><span>标签 JSON</span><input name="tagsJson" defaultValue={activeDocument.tagsJson} /></label>
+                <button type="submit">保存文件</button>
+              </form>
+              <form action={deleteProgressWikiDocumentAction}>
+                <input type="hidden" name="storyId" value={storyId} />
+                <input type="hidden" name="sessionId" value={sessionId} />
+                <input type="hidden" name="documentId" value={activeDocument.id} />
+                <button className="secondary danger" type="submit">删除文件</button>
+              </form>
+            </>
+          ) : (
+            <p className="empty">选择或创建一个 Wiki 文件后编辑内容。</p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function getWikiPathSegments(title: string) {
+  return title.split("/").map((segment) => segment.trim()).filter(Boolean);
+}
+
+function getWikiFolderRows(documents: Awaited<ReturnType<typeof listProgressWiki>>["documents"]) {
+  const folders = new Map<string, { path: string; name: string; depth: number }>();
+  for (const document of documents) {
+    const segments = getWikiPathSegments(document.title);
+    for (let index = 0; index < segments.length - 1; index += 1) {
+      const path = segments.slice(0, index + 1).join("/");
+      if (!folders.has(path)) {
+        folders.set(path, {
+          path,
+          name: segments[index],
+          depth: index
+        });
+      }
+    }
+  }
+  return [...folders.values()].sort((left, right) => left.path.localeCompare(right.path));
 }
 
 function TracePanel({ activeSessionTitle, workflowTraces }: { activeSessionTitle: string; workflowTraces: Awaited<ReturnType<typeof listWorkflowTracesForSession>> }) {

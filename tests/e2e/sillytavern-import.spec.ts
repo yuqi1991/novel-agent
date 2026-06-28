@@ -29,6 +29,10 @@ test("Story Workspace imports SillyTavern character JSON", async ({ page }) => {
   await expect(characterProfiles.getByText("Mira Vale")).toBeVisible();
   await expect(characterProfiles.getByText("Archivist who remembers every drowned city.")).toBeVisible();
   await expect(characterProfiles.getByText("Careful, curious, and exacting.")).toBeVisible();
+
+  const worldEntries = drawer.getByRole("region", { name: "世界书条目" });
+  await expect(worldEntries.getByRole("heading", { name: "Archive Wardens" })).toBeVisible();
+  await expect(worldEntries.getByText("Archive Wardens bind drowned relics with brass bells.")).toBeVisible();
 });
 
 test("Story Workspace imports SillyTavern world JSON", async ({ page }) => {

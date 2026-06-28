@@ -12,6 +12,25 @@
     "tags": ["archivist", "reef", "mystery"],
     "extensions": {
       "novel_agent_fixture": true
+    },
+    "character_book": {
+      "name": "Mira Vale Lore",
+      "entries": [
+        {
+          "comment": "Archive Wardens",
+          "key": ["wardens", "archive guard"],
+          "content": "Archive Wardens bind drowned relics with brass bells.",
+          "constant": true
+        },
+        {
+          "comment": "Storm Tide",
+          "keys": ["storm tide"],
+          "content": "The storm tide opens sealed rooms below the Bell Reef."
+        }
+      ],
+      "extensions": {
+        "source": "fixture"
+      }
     }
   }
 }

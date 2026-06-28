@@ -49,6 +49,38 @@ describe("story-creation-service", () => {
     );
   });
 
+  it("parses embedded SillyTavern character books into story world entries", () => {
+    const draft = parseSillyTavernStoryDraft({
+      sourceType: "character_card",
+      originalFilename: "lilier.json",
+      jsonText: JSON.stringify({
+        spec: "chara_card_v2",
+        data: {
+          name: "莉莉儿",
+          description: "精灵猎手。",
+          character_book: {
+            entries: [
+              {
+                comment: "阿尔卡迪亚大陆",
+                key: ["阿尔卡迪亚"],
+                content: "充满魔法力量的大陆。"
+              }
+            ]
+          }
+        }
+      })
+    });
+
+    expect(draft.worldEntries).toEqual([
+      expect.objectContaining({
+        title: "阿尔卡迪亚大陆",
+        body: "充满魔法力量的大陆。",
+        inclusionMode: "triggered",
+        importedAssetIndex: 0
+      })
+    ]);
+  });
+
   it("creates a Story with imported assets, Character Profiles, and World Entries from one draft", async () => {
     const db = await createTestDatabase();
     const draft = parseSillyTavernStoryDraft({
