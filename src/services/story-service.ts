@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Database } from "@/db/client";
 import { db } from "@/db/client";
@@ -11,7 +11,12 @@ export const createStoryInput = z.object({
   description: z.string().trim().max(2_000).optional().default("")
 });
 
+export const updateStoryInput = createStoryInput.extend({
+  storyId: z.string().trim().min(1, "Story id is required")
+});
+
 export type CreateStoryInput = z.input<typeof createStoryInput>;
+export type UpdateStoryInput = z.input<typeof updateStoryInput>;
 
 export async function listStories(database: Database = db) {
   return database.select().from(stories).orderBy(asc(stories.createdAt));
@@ -43,5 +48,24 @@ export async function createStory(input: CreateStoryInput, database: Database = 
     throw new Error("Story was not persisted");
   }
   ensureStoryDataDirectory(story.id);
+  return story;
+}
+
+export async function updateStory(input: UpdateStoryInput, database: Database = db) {
+  const parsed = updateStoryInput.parse(input);
+
+  await database
+    .update(stories)
+    .set({
+      title: parsed.title,
+      description: parsed.description,
+      updatedAt: sql`CURRENT_TIMESTAMP`
+    })
+    .where(eq(stories.id, parsed.storyId));
+
+  const story = await getStory(parsed.storyId, database);
+  if (!story) {
+    throw new Error("Story was not found");
+  }
   return story;
 }

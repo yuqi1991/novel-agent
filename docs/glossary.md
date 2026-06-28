@@ -1,257 +1,105 @@
-# Novel Agent
+# 术语表
 
-This context defines the product language for a single-player, agent-driven text role-play framework. It exists to keep story creation, imported role-play assets, game sessions, and agent orchestration concepts distinct.
+本文统一 Novel Agent 的产品语言，避免把故事创作、导入资产、游玩存档和 Agent 编排概念混在一起。
 
-## Language
+## 核心术语
 
-**Story**:
-A playable role-play setting owned by the user, containing the background, cast, and world material shared by its play sessions.
-_Avoid_: Campaign, project, chat
+**Story**：用户拥有的可游玩 RP 故事容器，包含背景、角色和多个存档共享的世界资料。避免称为 campaign、project、chat。
 
-**Play Session**:
-An isolated game save under a Story, containing the conversation history and evolved state for one branch of play.
-_Avoid_: Chat, save file, thread
+**Play Session**：Story 下的隔离游戏存档，包含一个分支的聊天历史和演化状态。避免称为 chat、thread。
 
-**Session Fork**:
-A new Play Session created from a specific point in an existing Play Session history.
-_Avoid_: Copy, branch, duplicate
+**Session Fork**：从已有 Play Session 某个 Conversation Position 创建的新 Play Session。
 
-**Player Character**:
-The character the user performs as while playing a Story.
-_Avoid_: User, protagonist, main character
+**Player Character**：用户游玩时扮演的角色。
 
-**Non-Player Character**:
-A character in a Story that is performed by the system rather than by the user.
-_Avoid_: Bot, assistant, AI character
+**Non-Player Character**：由系统演绎的故事角色。
 
-**Orchestration Configuration**:
-A reusable saved arrangement of agents and their responsibilities that can be selected during play across different Stories.
-_Avoid_: Preset, workflow, pipeline
+**Conversation Log**：Play Session 中有序保存的消息和系统事件，是该分支发生过什么的原始事实来源。
 
-**Conversation Log**:
-The complete ordered record of messages and system events in a Play Session, treated as the raw source of what happened in that branch.
-_Avoid_: Transcript, chat history
+**Conversation Position**：Play Session 中的一个编号位置，用于 reroll、fork、记忆边界和快照。
 
-**Progress Wiki**:
-A Play Session-owned long-term memory library summarizing durable facts, plot progress, character changes, and world changes extracted from that session's Conversation Log.
-_Avoid_: Memory, summary, lorebook
+**Narrative Response**：系统在一轮游玩中给用户看的单段统一回复，包含叙事、对白和结果。
 
-**Context Pack**:
-The assembled information given to an agent for one inference step, such as recent conversation turns, relevant Progress Wiki entries, Story material, and task instructions.
-_Avoid_: Prompt, context window, retrieval result
+**Reply Variant**：同一个系统回复楼的一个生成候选。
 
-**Memory Boundary**:
-The highest conversation position that has been incorporated into a Progress Wiki snapshot and is considered stable for long-term memory.
-_Avoid_: Checkpoint, summarized until
+**Selected Variant**：当前被选中的 Reply Variant。
 
-**Wiki Snapshot**:
-A complete versioned Progress Wiki as of a Memory Boundary, used to restore or fork a Play Session without carrying memory from later conversation positions.
-_Avoid_: Backup, wiki version, memory checkpoint
+**Selected Path**：由每个位置的 Selected Variant 形成的当前有效聊天路径。
 
-**Conversation Position**:
-A numbered point in a Play Session conversation used as the target for rewind, reroll, memory boundaries, and session forks.
-_Avoid_: Floor, turn number, message index
+**Mutable Tail**：Play Session 最新系统回复位置，可原地 reroll 或切换 variant。
 
-**Fork Source Range**:
-The prefix of a source Play Session inherited by a Session Fork, ending at the selected Conversation Position and excluding later conversation records.
-_Avoid_: Fork history, copied messages
+**Fork Source Range**：Session Fork 从 source session 继承的前缀范围，截止到选定 Conversation Position。
 
-**Imported Asset**:
-An original external file or metadata payload brought into the system and preserved for compatibility, traceability, or export.
-_Avoid_: Source file, upload
+## 故事资料
 
-**Story Material**:
-Native structured material belonging to a Story, derived from imports or created by the user, and used by agents during play.
-_Avoid_: Lore, content, data
+**Story Material**：属于 Story 的内部结构化资料，可由用户创建或从导入资产转换而来。
 
-**Character Profile**:
-Story Material that defines a Player Character or Non-Player Character, including identity, persona, behavioral constraints, and relevant presentation details.
-_Avoid_: Character card, persona card
+**Imported Asset**：导入系统的原始外部文件或 metadata payload，用于兼容性和可追溯性。
 
-**World Entry**:
-Story Material that describes a retrievable piece of world knowledge, such as locations, factions, rules, history, or situational facts.
-_Avoid_: Lorebook entry, world book entry
+**Character Profile**：定义 Player Character 或 Non-Player Character 的 Story Material，包括身份、人设、行为约束和表现细节。
 
-**Agent Role**:
-A built-in responsibility that an agent can perform within an Orchestration Configuration, such as plot direction, character performance, world simulation, memory curation, prose polishing, or retrieval.
-_Avoid_: Agent type, worker type
+**World Entry**：描述世界知识的 Story Material，例如地点、派系、规则、历史或局势事实。
 
-**Agent Assignment**:
-A configured instance of an Agent Role within an Orchestration Configuration, including its model, instructions, tools, skills, context strategy, and execution position.
-_Avoid_: Agent node, step
+**Entry Inclusion Mode**：World Entry 进入 Context Pack 的规则，包括 always、triggered、semantic、disabled。
 
-**Skill Set**:
-The bounded collection of skills available to an Agent Assignment while performing its role.
-_Avoid_: Tool list, capability list
+**SillyTavern Character Import**：导入常见 SillyTavern 角色卡 JSON 或 PNG metadata，并转成 Character Profile。
 
-**Subagent**:
-A short-lived helper agent spawned by an Agent Assignment to perform parallel work for one inference step, limited to one level below the spawning agent.
-_Avoid_: Child agent, worker agent
+**SillyTavern World Import**：导入 SillyTavern world/lorebook JSON，并转成 World Entries。
 
-**Subagent Result**:
-A read-only contribution returned from a Subagent to its spawning Agent Assignment, such as findings, drafts, candidates, or structured recommendations.
-_Avoid_: Subagent output, child result
+## 记忆
 
-**Reply Variant**:
-One generated alternative for the latest system response at a Conversation Position, selectable by the user before continuing play.
-_Avoid_: Candidate reply, reroll output, completion
+**Progress Wiki**：Play Session 拥有的长期记忆文档库，记录稳定事实、剧情进度、人物变化和世界变化。
 
-**Selected Variant**:
-The Reply Variant currently chosen as the active continuation for a Conversation Position.
-_Avoid_: Accepted reply, committed reply
-
-**Selected Path**:
-The active sequence through a Play Session conversation, formed by the currently selected Reply Variant at each position that has variants.
-_Avoid_: Main branch, active history
-
-**Mutable Tail**:
-The latest system response position in a Play Session where the user may switch or add Reply Variants without creating a Session Fork.
-_Avoid_: Editable message, current reply
-
-**Narrative Response**:
-The single user-visible system reply for one play turn, presenting narration, dialogue, and consequences as one coherent text output.
-_Avoid_: NPC message, assistant message
-
-**Writing Team Mode**:
-The MVP orchestration style where agents perform functional writing and reasoning roles rather than each agent independently embodying one character.
-_Avoid_: Multi-character mode, village mode
-
-**Village Mode**:
-A future orchestration style where separate agents independently embody individual Non-Player Characters or world actors.
-_Avoid_: NPC-per-agent mode
-
-**Optional Player Character**:
-A Player Character definition that may be absent from a Story or Play Session, in which case the user plays without structured player-character material.
-_Avoid_: Empty user character, anonymous protagonist
-
-**Player Agency Preference**:
-A user-defined writing preference for how much the system may provide minor speech or reactions for the Player Character while avoiding turning-point or key decisions on the Player Character's behalf.
-_Avoid_: Player agency boundary, user control, agency rule
-
-**Workflow Run**:
-One complete execution of an Orchestration Configuration to produce a Reply Variant for a single play turn.
-_Avoid_: Inference run, generation job, turn execution
-
-**Generation Workflow**:
-One complete multi-agent execution for producing a Narrative Response from the current Play Session state and the currently selected Orchestration Configuration.
-_Avoid_: Run, pipeline execution, turn execution
-
-**Entry Inclusion Mode**:
-The rule for whether a World Entry is included in a Context Pack, such as always included, explicit trigger-based, semantic retrieval-based, or manually disabled.
-_Avoid_: Activation mode, insertion rule
-
-**Memory Curation Skill**:
-A skill available to a memory-focused Agent Assignment that defines how Conversation Log ranges are distilled into Progress Wiki updates.
-_Avoid_: Summarization prompt, memory workflow
-
-**Agent Runtime**:
-The lowest execution layer that runs agents against LLM providers and supports conversations, tool calls, skills, and subagent calls.
-_Avoid_: Agent framework, pi-agent core
-
-**Multi-Agent Scheduler**:
-The orchestration layer that coordinates Agent Assignments, message passing, execution order, and parallel work within a Generation Workflow.
-_Avoid_: Workflow engine, coordinator
-
-**Role-Play Domain**:
-The product layer that owns Stories, Play Sessions, Story Material, Progress Wikis, Context Packs, and player-facing role-play behavior.
-_Avoid_: Game logic, RP app layer
-
-**Linear Workflow**:
-A Generation Workflow shape where Agent Assignments run in a user-configured sequence, passing each step output to later steps through the Multi-Agent Scheduler.
-_Avoid_: Chain, pipeline
-
-**Agent Output**:
-The string result produced by an Agent Assignment and passed by the Multi-Agent Scheduler to later steps without system-level schema enforcement.
-_Avoid_: Structured output, result object
-
-**Agent Timeout**:
-The per-Agent Assignment time limit for completing its step in a Generation Workflow, after which the workflow fails.
-_Avoid_: Step timeout, retry policy
-
-**Workflow Failure**:
-A Generation Workflow outcome where an Agent Assignment fails or times out and no Narrative Response is produced for that attempt.
-_Avoid_: Error recovery, failed turn
-
-**Workflow Trace**:
-A diagnostic record of a Generation Workflow attempt, including agent steps, inputs, outputs, timing, and failures, kept separate from the Conversation Log.
-_Avoid_: Conversation event, debug log
-
-**Trace Viewer**:
-A user-facing advanced view for inspecting Workflow Traces while configuring, testing, or debugging Orchestration Configurations.
-_Avoid_: Debug panel, run inspector
-
-**Web UI**:
-The primary MVP user interface for managing Stories, Play Sessions, Orchestration Configurations, Progress Wikis, and play interaction.
-_Avoid_: CLI, desktop client
-
-**Single-User Local App**:
-The MVP deployment model where one local user manages all Stories, Play Sessions, and configurations without accounts, authentication, or multi-user permissions.
-_Avoid_: Multi-tenant app, cloud account
-
-**Story Library**:
-The Web UI workspace for listing, creating, importing, and opening Stories.
-_Avoid_: Home page, project list
-
-**Play Workspace**:
-The Web UI workspace for playing a Story through Play Sessions, selecting Orchestration Configurations, rerolling Reply Variants, and creating Session Forks.
-_Avoid_: Chat page, game screen
-
-**Story Material Editor**:
-The Web UI workspace for editing Character Profiles, World Entries, fixed Story material, and Imported Asset mappings.
-_Avoid_: Lore editor, card editor
-
-**Progress Wiki Editor**:
-The Web UI workspace for viewing and manually correcting a Play Session Progress Wiki and its snapshots.
-_Avoid_: Memory editor, summary viewer
-
-**Orchestration Builder**:
-The Web UI workspace for editing Orchestration Configurations, including Agent Assignments, order, instructions, Skill Sets, timeouts, models, and providers.
-_Avoid_: Workflow builder, agent editor
-
-**SillyTavern Character Import**:
-An import path for common SillyTavern character card JSON or PNG metadata, preserved as an Imported Asset and converted into a Character Profile.
-_Avoid_: Full character migration, card runtime
-
-**SillyTavern World Import**:
-An import path for SillyTavern world or lorebook JSON, preserved as an Imported Asset and converted into World Entries.
-_Avoid_: Full SillyTavern migration, lorebook runtime
-
-**Model Defaults**:
-The global default LLM provider and model settings used by Agent Assignments unless they define their own overrides.
-_Avoid_: Global model, default provider
-
-**Model Override**:
-An Agent Assignment-specific provider or model setting that replaces the Model Defaults for that agent step.
-_Avoid_: Per-agent model, model config
-
-**Tool**:
-A callable capability available through the Agent Runtime, such as Story Material retrieval, Progress Wiki access, web search, MCP operations, or other external APIs.
-_Avoid_: Skill, function
-
-**Skill**:
-A reusable task method available to an Agent Assignment that guides how to perform work and may rely on one or more Tools.
-_Avoid_: Tool, prompt snippet
-
-**External Tool Configuration**:
-User-provided configuration that exposes optional external Tools, such as web search through MCP, to selected Skill Sets.
-_Avoid_: Built-in web search, plugin config
-
-**Agent-Facing Tool**:
-A Tool exposed to Agent Assignments through Skill Sets, distinct from ordinary Web UI actions such as form submissions.
-_Avoid_: UI action, backend endpoint
-
-**Story Material Write Tool**:
-An Agent-Facing Tool that allows an authorized Agent Assignment to propose or apply changes to Story Material.
-_Avoid_: User editor, form save
-
-**Progress Wiki Skill**:
-A Skill that controls how an authorized Agent Assignment reads, edits, and snapshots a Play Session Progress Wiki.
-_Avoid_: Wiki read tool, wiki write tool
-
-**Story Material Proposal**:
-A pending change to Story Material produced by an authorized Agent Assignment and requiring user review before it affects the shared Story.
-_Avoid_: Automatic story update, draft edit
-
-**Automatic Wiki Curation**:
-The default behavior where an authorized memory-focused Agent Assignment updates a Play Session Progress Wiki without per-update user approval, constrained by Memory Boundaries and Wiki Snapshots.
-_Avoid_: Manual memory approval, story material update
+**Memory Boundary**：已经进入 Progress Wiki snapshot 的最高 Conversation Position，代表长期记忆整理到哪里。
+
+**Wiki Snapshot**：某个 Memory Boundary 上完整版本的 Progress Wiki，用于恢复或 fork。
+
+**Memory Curation Skill**：记忆 Agent 使用的 Skill，规定如何把 Conversation Log 范围整理进 Progress Wiki。
+
+## Agent 和编排
+
+**Orchestration Configuration**：可复用的 Agent 编排配置，不绑定 Story。
+
+**Agent Role**：Agent 在编排中的职责，例如剧情编排、世界推演、记忆整理、文字润色或资料检索。
+
+**Agent Assignment**：Orchestration Configuration 中的一个具体 Agent 步骤，包含模型、指令、Skill、工具、timeout 和顺序。
+
+**Skill Set**：某个 Agent Assignment 可用的 Skill 集合。
+
+**Tool**：Runtime 暴露给 Agent 的可调用能力，例如 MCP/web search。
+
+**Subagent**：Agent 在一次推理中召唤的短生命周期辅助 Agent，MVP 只允许一级。
+
+**Subagent Result**：Subagent 返回给父 Agent 的只读结果，例如 findings、drafts、candidates。
+
+**Generation Workflow**：为一个游玩回合生成 Narrative Response 的完整多 Agent 执行。
+
+**Workflow Run**：一次 Orchestration Configuration 执行。
+
+**Linear Workflow**：Agent Assignments 按用户配置顺序执行，上一环输出传给下一环。
+
+**Agent Output**：Agent Assignment 输出的字符串结果，系统层不强制 schema。
+
+**Agent Timeout**：Agent Assignment 完成其步骤的时间上限。
+
+**Workflow Failure**：某个 Agent 失败或 timeout，导致本次 Generation Workflow 不产生 Narrative Response。
+
+**Workflow Trace**：记录 workflow attempt 的诊断数据，包括每步输入、输出、耗时和失败。
+
+**Trace Viewer**：用户查看 Workflow Trace 的高级调试界面。
+
+## 架构
+
+**Agent Runtime**：底层执行层，负责调用 LLM provider、tool、skill 和 subagent。
+
+**Multi-Agent Scheduler**：编排层，负责 Agent 顺序、消息传递和 workflow trace。
+
+**Role-Play Domain**：产品领域层，拥有 Story、Session、Story Material、Progress Wiki、Context Pack 和玩家可见行为。
+
+**Context Pack**：一次 Agent 推理的输入集合，包括近期聊天、相关 Wiki、Story Material、World Entries、Player Character 和任务指令。
+
+**Writing Team Mode**：MVP 模式，Agent 是功能性写作团队成员。
+
+**Village Mode**：未来模式，一个 Agent 独立扮演一个 NPC 或世界行动者。
+
+**Single-User Local App**：MVP 部署模型，一个本地用户管理所有故事、存档和配置，无账号系统。

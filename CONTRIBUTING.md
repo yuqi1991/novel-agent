@@ -1,8 +1,8 @@
-# Contributing
+# 贡献指南
 
-Novel Agent is currently a local-first MVP. Contributions should keep the codebase easy for human reviewers and coding agents to audit.
+Novel Agent 当前是本地优先的 MVP。贡献目标是让代码容易被人类 reviewer 和编码 Agent 审阅。
 
-## Setup
+## 本地准备
 
 ```bash
 npm install
@@ -11,9 +11,9 @@ npm run db:migrate
 npm run dev
 ```
 
-## Before Opening A PR
+## 提交 PR 前
 
-Run:
+运行：
 
 ```bash
 npm run typecheck
@@ -22,20 +22,20 @@ npm run build
 npm run test:e2e
 ```
 
-If a check cannot be run, document why and what local evidence you used instead.
+如果某个检查无法运行，需要说明原因，以及你用了哪些本地证据替代。
 
-## Change Guidelines
+## 改动原则
 
-- Keep changes scoped to the feature or bug.
-- Add or update tests for persistence, import, orchestration, agent runtime, or UI workflow changes.
-- Update `README.md`, `AGENTS.md`, `docs/`, or `documentation/` when behavior, setup, data layout, or safety boundaries change.
-- Add Drizzle migrations with `npm run db:generate` after schema changes.
-- Do not commit local secrets, databases, generated build outputs, or private imported character cards.
+- 改动范围聚焦在当前功能或 bug。
+- 触碰持久化、导入、编排、Agent Runtime 或 UI 流程时，补充或更新测试。
+- 行为、安装、数据布局或安全边界变化时，同步更新 `README.md`、`AGENTS.md`、`docs/` 或 `documentation/`。
+- 修改数据库 schema 后，用 `npm run db:generate` 生成 Drizzle 迁移。
+- 不提交本地密钥、数据库、构建产物或私有角色卡。
 
-## Documentation Guidelines
+## 文档规则
 
-- Product intent and design decisions live in `docs/`.
-- Reviewer/auditor handoff docs live in `documentation/`.
-- Coding-agent operating context lives in `AGENTS.md`.
+- 产品意图和设计决策放在 `docs/`。
+- reviewer / auditor / 新开发 Agent 的实现交接文档放在 `documentation/`。
+- 编码 Agent 的操作上下文放在 `AGENTS.md`。
 
-Keep these documents factual. If a capability is planned but not implemented, say so explicitly.
+文档要写事实。计划中但未实现的能力必须明确标注。

@@ -7,8 +7,9 @@ test("Story Workspace creates Character Profiles and World Entries", async ({ pa
   await createStory(page, storyTitle, "A workspace for Story Material.");
 
   await expect(page.getByRole("heading", { name: storyTitle })).toBeVisible();
-  const drawer = await openPanel(page, "世界书");
-  await expect(drawer.getByRole("region", { name: "故事材料概览" })).toBeVisible();
+  const drawer = await openPanel(page, "故事资料 / 世界书");
+  await expect(drawer.getByRole("form", { name: "故事资料" })).toBeVisible();
+  await expect(drawer.getByRole("region", { name: "角色列表" })).toBeVisible();
 
   const characterForm = drawer.getByRole("heading", { name: "创建角色" }).locator("..");
   await characterForm.getByLabel("名称").fill("Mira Vale");
@@ -16,8 +17,9 @@ test("Story Workspace creates Character Profiles and World Entries", async ({ pa
   await characterForm.getByLabel("人设").fill("Archivist who remembers every drowned city.");
   await characterForm.getByRole("button", { name: "创建角色" }).click();
 
-  await expect(drawer.getByText("Mira Vale")).toBeVisible();
-  await expect(drawer.getByText("Archivist who remembers every drowned city.")).toBeVisible();
+  const characterProfiles = drawer.getByRole("region", { name: "角色列表" });
+  await expect(characterProfiles.getByText("Mira Vale")).toBeVisible();
+  await expect(characterProfiles.getByText("Archivist who remembers every drowned city.")).toBeVisible();
 
   await drawer.getByRole("button", { name: "设为玩家角色" }).click();
   await expect(drawer.getByRole("button", { name: "取消玩家角色" })).toBeVisible();

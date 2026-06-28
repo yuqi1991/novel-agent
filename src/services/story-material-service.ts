@@ -20,6 +20,10 @@ export const createCharacterProfileInput = z.object({
   profileText: z.string().trim().max(10_000).optional().default("")
 });
 
+export const updateCharacterProfileInput = createCharacterProfileInput.extend({
+  profileId: idSchema
+});
+
 export const deleteCharacterProfileInput = z.object({
   storyId: storyIdSchema,
   profileId: idSchema
@@ -37,6 +41,10 @@ export const createWorldEntryInput = z.object({
   ),
   triggerConfig: z.unknown().optional(),
   tags: z.array(z.string().trim().min(1)).optional()
+});
+
+export const updateWorldEntryInput = createWorldEntryInput.extend({
+  worldEntryId: idSchema
 });
 
 export const deleteWorldEntryInput = z.object({
@@ -61,8 +69,10 @@ export const updatePlayerCharacterInput = z.object({
 });
 
 export type CreateCharacterProfileInput = z.input<typeof createCharacterProfileInput>;
+export type UpdateCharacterProfileInput = z.input<typeof updateCharacterProfileInput>;
 export type DeleteCharacterProfileInput = z.input<typeof deleteCharacterProfileInput>;
 export type CreateWorldEntryInput = z.input<typeof createWorldEntryInput>;
+export type UpdateWorldEntryInput = z.input<typeof updateWorldEntryInput>;
 export type DeleteWorldEntryInput = z.input<typeof deleteWorldEntryInput>;
 export type UpdatePlayerCharacterInput = z.input<typeof updatePlayerCharacterInput>;
 
@@ -112,6 +122,31 @@ export async function createCharacterProfile(input: CreateCharacterProfileInput,
   return profile;
 }
 
+export async function updateCharacterProfile(input: UpdateCharacterProfileInput, database: Database = db) {
+  const parsed = updateCharacterProfileInput.parse(input);
+
+  await database
+    .update(characterProfiles)
+    .set({
+      name: parsed.name,
+      role: parsed.role,
+      profileText: parsed.profileText,
+      updatedAt: sql`CURRENT_TIMESTAMP`
+    })
+    .where(and(eq(characterProfiles.id, parsed.profileId), eq(characterProfiles.storyId, parsed.storyId)));
+
+  const [profile] = await database
+    .select()
+    .from(characterProfiles)
+    .where(and(eq(characterProfiles.id, parsed.profileId), eq(characterProfiles.storyId, parsed.storyId)))
+    .limit(1);
+
+  if (!profile) {
+    throw new Error("Character profile was not found");
+  }
+  return profile;
+}
+
 export async function deleteCharacterProfile(input: DeleteCharacterProfileInput | string, database: Database = db) {
   if (typeof input === "string") {
     const profileId = idSchema.parse(input);
@@ -153,6 +188,43 @@ export async function createWorldEntry(input: CreateWorldEntryInput, database: D
   const [entry] = await database.select().from(worldEntries).where(eq(worldEntries.id, id)).limit(1);
   if (!entry) {
     throw new Error("World entry was not persisted");
+  }
+  return entry;
+}
+
+export async function updateWorldEntry(input: UpdateWorldEntryInput, database: Database = db) {
+  const parsed = updateWorldEntryInput.parse(input);
+  const [existingEntry] = await database
+    .select()
+    .from(worldEntries)
+    .where(and(eq(worldEntries.id, parsed.worldEntryId), eq(worldEntries.storyId, parsed.storyId)))
+    .limit(1);
+
+  if (!existingEntry) {
+    throw new Error("World entry was not found");
+  }
+
+  await database
+    .update(worldEntries)
+    .set({
+      title: parsed.title,
+      body: parsed.body,
+      inclusionMode: parsed.inclusionMode,
+      triggerConfigJson:
+        parsed.triggerConfig === undefined ? existingEntry.triggerConfigJson : JSON.stringify(parsed.triggerConfig),
+      tagsJson: parsed.tags === undefined ? existingEntry.tagsJson : JSON.stringify(parsed.tags),
+      updatedAt: sql`CURRENT_TIMESTAMP`
+    })
+    .where(and(eq(worldEntries.id, parsed.worldEntryId), eq(worldEntries.storyId, parsed.storyId)));
+
+  const [entry] = await database
+    .select()
+    .from(worldEntries)
+    .where(and(eq(worldEntries.id, parsed.worldEntryId), eq(worldEntries.storyId, parsed.storyId)))
+    .limit(1);
+
+  if (!entry) {
+    throw new Error("World entry was not found");
   }
   return entry;
 }

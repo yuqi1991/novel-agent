@@ -1,50 +1,50 @@
-# Permissions
+# 权限模型
 
-## Roles And Scope
+## 角色和范围
 
-Novel Agent currently has one implicit role: local user. There is no login, account, tenant, or remote authorization model.
+Novel Agent 当前只有一个隐含角色：本地用户。没有登录、账号、租户或远程授权模型。
 
-Scope is derived from resource relationships in SQLite:
+资源范围来自 SQLite 中的关系：
 
-- A Play Session belongs to a Story through `play_sessions.story_id`.
-- Conversation positions, player messages, reply variants, progress wiki docs, and wiki snapshots belong to a Play Session.
-- Character profiles, world entries, settings, imported assets, and proposals belong to a Story.
+- Play Session 通过 `play_sessions.story_id` 属于 Story。
+- Conversation positions、player messages、reply variants、Progress Wiki docs 和 wiki snapshots 属于 Play Session。
+- Character profiles、world entries、settings、imported assets 和 proposals 属于 Story。
 
-The app relies on service-layer checks rather than database row-level security.
+应用依赖服务层检查，而不是数据库行级权限。
 
-## Resource Operation Matrix
+## 资源操作矩阵
 
-| Resource | Operation | Local user | Enforcement |
+| 资源 | 操作 | 本地用户 | Enforcement |
 | --- | --- | --- | --- |
-| Story | List/create/view | Allowed | Server actions and `story-service` validation |
-| Story Material | Create/delete/update settings | Allowed | `story-material-service` validates story and profile/entry ownership |
-| Imported Asset | Create through import | Allowed | `story-creation-service`, `sillytavern-import-service` validation |
-| Play Session | Create/list/default | Allowed within story | `session-service` checks story exists |
-| Play Session | Fork | Allowed if source belongs to story | `assertSessionBelongsToStory`, fork position checks |
-| Conversation Log | Append player turn | Allowed if session belongs to story | `assertSessionBelongsToStory`; rollback on generation failure |
-| Reply Variant | Reroll/select | Allowed only on latest system response | `getMutableTailSystemPosition` and variant ownership checks |
-| Progress Wiki | Create/list/update/delete/snapshot | Allowed within session | `progress-wiki-service` session/document matching |
-| Orchestration Configuration | Manage through UI | Allowed | Orchestration config service validation |
-| File-defined Agents | Edit local files | Local filesystem owner only | Not mediated by Web UI |
-| Provider Auth | Edit local secret file/env | Local filesystem owner only | Ignored by git; not exposed in Web UI |
+| Story | list/create/view/update | 允许 | Server Actions 和 `story-service` 校验 |
+| Story Material | create/delete/update settings | 允许 | `story-material-service` 校验 story 和 profile/entry 归属 |
+| Imported Asset | import 创建 | 允许 | `story-creation-service`、`sillytavern-import-service` 校验 |
+| Play Session | create/list/default | story 内允许 | `session-service` 检查 story 存在 |
+| Play Session | fork | source 属于 story 时允许 | `assertSessionBelongsToStory` 和 fork position 检查 |
+| Conversation Log | append player turn | session 属于 story 时允许 | `assertSessionBelongsToStory`；生成失败回滚 |
+| Reply Variant | reroll/select | 只允许最新系统回复 | `getMutableTailSystemPosition` 和 variant 归属检查 |
+| Progress Wiki | create/list/update/delete/snapshot | session 内允许 | `progress-wiki-service` 校验 session/document 匹配 |
+| Orchestration Configuration | UI 管理 | 允许 | Orchestration config service 校验 |
+| File-defined Agents | 编辑本地文件 | 本地文件系统 owner | 不经 Web UI |
+| Provider Auth | 编辑本地密钥文件或 env | 本地文件系统 owner | git ignore；Web UI 不暴露 |
 
-## Agent Permissions
+## Agent 权限
 
-Agents can read assembled context passed by the app. In the current play loop, agents return text to the orchestration service. The app owns persistence.
+Agent 可以读取应用传入的 Context Pack。当前游玩循环中，Agent 只把文本返回给编排服务，应用拥有持久化权。
 
-Subagents are read-only helper calls in the service model. They return results to a parent agent and cannot directly write Conversation Log, Progress Wiki, or Story Material.
+Subagent 是只读辅助调用：它把结果返回父 Agent，不能直接写 Conversation Log、Progress Wiki 或 Story Material。
 
-Future tool support must preserve this distinction:
+未来工具支持必须保留这个区分：
 
-- Agent output can suggest or draft.
-- App services validate and persist.
-- Shared Story Material mutations require proposal/review boundaries.
-- Progress Wiki mutation should be governed through a dedicated Progress Wiki skill boundary.
+- Agent output 可以建议或起草。
+- App services 校验并持久化。
+- Shared Story Material mutation 需要 proposal/review 边界。
+- Progress Wiki mutation 应该由专门的 Progress Wiki skill 边界管理。
 
-## Deny Cases To Preserve
+## 必须保留的拒绝场景
 
-- A session ID from another story must not be accepted for a story-scoped action.
-- Only the latest system response can change selected reply variant.
-- Reroll requires a latest system response and preceding player message.
-- Fork variant selection is only valid for a system response fork point.
-- Progress Wiki document updates/deletes require document ID and session ID match.
+- story-scoped action 不能接受其他 story 的 session ID。
+- 只有最新系统回复能改变 selected reply variant。
+- Reroll 必须有最新系统回复和前一条玩家消息。
+- Fork variant selection 只对系统回复 fork 点有效。
+- Progress Wiki document 更新/删除必须同时匹配 document ID 和 session ID。

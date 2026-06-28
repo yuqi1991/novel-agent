@@ -1,59 +1,61 @@
-# Coding Agent Guide
+# 编码 Agent 指南
 
-This file is the handoff entrypoint for coding agents working in this repo.
+这是新开发 Agent 进入本仓库时的入口文档。
 
-## First Read
+## 先读这些
 
-1. `README.md` for setup and command surface.
-2. `documentation/architecture.md` for the current implemented system map.
-3. `docs/technical-architecture.md` for the deeper target architecture.
-4. `docs/glossary.md` for domain terms.
-5. `docs/issues/mvp-issue-slices.md` for remaining work.
+1. `README.md`：安装、启动、命令和项目结构。
+2. `documentation/architecture.md`：当前已经实现的系统地图。
+3. `docs/technical-architecture.md`：技术架构总览和拆分文档入口。
+4. `docs/glossary.md`：领域术语。
+5. `docs/issues/mvp-issue-slices.md`：MVP 切片和剩余工作。
 
-## Current Implementation Rules
+## 当前实现规则
 
-- Keep all local runtime configuration and mutable app data under git-ignored `user_data/`.
-- Do not reintroduce dependencies on `~/.pi/agent` for this app.
-- Do not hard-code workflow agent names in orchestration logic. Test/sample agents are generated locally under `user_data/agents/` when missing.
-- File-defined skills must use `skills/<skill-id>/SKILL.md` with `name` and `description` frontmatter.
-- SQLite is the authoritative structured store for the current MVP.
-- Conversation logs are raw fact source. Progress Wiki is derived, editable session memory.
-- Progress Wiki content is currently SQLite-backed; `user_data/stories/<story-id>/saves/<session-id>/wiki/` exists as the reserved file-backed layout.
-- Subagents are read-only helpers. They return results to their parent agent and cannot mutate app state directly.
+- 所有本地 Runtime 配置和可变应用数据都必须放在 git 忽略的 `user_data/`。
+- 不要重新引入对 `~/.pi/agent` 的依赖。
+- 编排逻辑不能写死 Agent 名称；示例 Agent 只作为缺省模板生成在 `user_data/agents/`。
+- 文件定义 Skill 必须位于 `skills/<skill-id>/SKILL.md`，并包含 `name` 和 `description` frontmatter。
+- SQLite 是当前 MVP 的权威结构化存储。
+- 原始聊天记录是剧情事实来源；Progress Wiki 是由存档维护的派生、可编辑记忆。
+- Progress Wiki 内容当前仍存 SQLite；`user_data/stories/<story-id>/saves/<session-id>/wiki/` 是预留的文件化布局。
+- Subagent 是只读辅助执行者，只能把结果返回给父 Agent，不能直接修改应用状态。
 
-## Validation Expectations
+## 验证要求
 
-Run these after most code changes:
+多数代码改动后运行：
 
 ```bash
 npm run typecheck
 npm test
 ```
 
-Run these before handing off UI, persistence, import, orchestration, or runtime changes:
+以下改动交付前还要运行：
 
 ```bash
 npm run build
 npm run test:e2e
 ```
 
-`npm run build` may emit a Turbopack warning about dynamic filesystem tracing from runtime config loading. Treat failures as blockers; treat the warning as known technical debt unless your change touches runtime config loading.
+适用范围：UI、持久化、导入、编排、Runtime、会话和记忆 Wiki。
 
-## File Ownership Hints
+`npm run build` 可能输出 Runtime 配置动态文件读取相关的 Turbopack warning。失败是阻塞；warning 是已知技术债，除非你的改动触碰 Runtime 配置加载。
 
-- UI routes and panels: `src/app/`
-- Server actions: `src/app/*-actions.ts`
-- Database schema: `src/db/schema.ts`
-- Migrations: `drizzle/`
-- Story/session/chat logic: `src/services/session-service.ts`, `src/services/story-service.ts`
-- SillyTavern import: `src/services/sillytavern-import-service.ts`, `src/services/story-creation-service.ts`
-- Multi-agent workflow: `src/services/orchestration-service.ts`
-- Runtime adapter: `src/services/agent-runtime/`
-- Progress Wiki: `src/services/progress-wiki-service.ts`
-- Trace viewer data: `src/services/trace-service.ts`
+## 文件定位
 
-## Safety Notes
+- UI 路由和面板：`src/app/`
+- Server Actions：`src/app/*-actions.ts`
+- 数据库 schema：`src/db/schema.ts`
+- 迁移：`drizzle/`
+- 故事、存档、聊天逻辑：`src/services/story-service.ts`、`src/services/session-service.ts`
+- SillyTavern 导入：`src/services/sillytavern-import-service.ts`、`src/services/story-creation-service.ts`
+- 多 Agent 编排：`src/services/orchestration-service.ts`
+- Runtime adapter：`src/services/agent-runtime/`
+- Progress Wiki：`src/services/progress-wiki-service.ts`
+- Trace Viewer 数据：`src/services/trace-service.ts`
 
-- Do not commit `user_data/`, `.env*`, `.next/`, `test-results/`, or private imported cards.
-- The root `莉莉儿.json` file is a local manual-test fixture and is intentionally not tracked.
-- Preserve user changes in dirty files unless explicitly told to revert them.
+## 安全边界
+
+- 不要提交 `user_data/`、`.env*`、`.next/`、`test-results/` 或私有导入卡。
+- 仓库根目录的 `莉莉儿.json` 是本地手工测试文件，故意不追踪。
+- 工作区可能已有用户或其他 Agent 的未提交改动；除非用户明确要求，不要回滚不属于你的改动。

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createStory } from "@/services/story-service";
+import { createStory, updateStory } from "@/services/story-service";
 import {
   createStoryFromDraft,
   parseSillyTavernStoryDraft
@@ -15,7 +15,7 @@ export async function createStoryAction(formData: FormData) {
   });
 
   revalidatePath("/");
-  redirect(`/stories/${story.id}`);
+  redirect(`/stories/${story.id}?panel=worldBook`);
 }
 
 export async function createStoryFromDraftAction(formData: FormData) {
@@ -28,7 +28,19 @@ export async function createStoryFromDraftAction(formData: FormData) {
   });
 
   revalidatePath("/");
-  redirect(`/stories/${story.id}`);
+  redirect(`/stories/${story.id}?panel=worldBook`);
+}
+
+export async function updateStoryAction(formData: FormData) {
+  const storyId = String(formData.get("storyId") ?? "");
+  await updateStory({
+    storyId,
+    title: String(formData.get("title") ?? ""),
+    description: String(formData.get("description") ?? "")
+  });
+
+  revalidatePath("/");
+  revalidatePath(`/stories/${storyId}`);
 }
 
 export async function parseSillyTavernStoryDraftAction(

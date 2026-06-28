@@ -1,45 +1,45 @@
-# Tests
+# 测试覆盖地图
 
-## Existing Coverage
+## 现有覆盖
 
-| Use case | Rule | Expected behavior | Evidence | Status |
+| 用例 | 规则 | 期望行为 | 证据 | 状态 |
 | --- | --- | --- | --- | --- |
-| DB migration | Schema applies cleanly | Migrations run against SQLite | `src/db/migration.test.ts` | Existing unit/integration |
-| Story creation | Story has default settings | Story and settings persist | `src/services/story-service.test.ts` | Existing unit/integration |
-| Story directory | Story creates user_data folder | `user_data/stories/<story-id>/saves` exists | `src/services/story-service.test.ts` | Existing unit/integration |
-| Session isolation | Sessions under same story do not share logs | One session transcript remains empty | `src/services/session-service.test.ts` | Existing unit/integration |
-| Session directory | Session creates wiki folder | `saves/<session-id>/wiki` exists | `src/services/session-service.test.ts` | Existing unit/integration |
-| First player turn | Player message and response persist | Conversation positions, reply variant, trace steps exist | `src/services/session-service.test.ts` | Existing unit/integration |
-| Reroll | Only latest system response can mutate | New variant persists and is selected | `src/services/session-service.test.ts`, `tests/e2e/reply-variants.spec.ts` | Existing unit/e2e |
-| Fork | Fork copies selected prefix only | Later source positions are excluded | `src/services/session-service.test.ts`, `tests/e2e/session-fork.spec.ts` | Existing unit/e2e |
-| Wiki snapshots | Fork copies eligible memory snapshot | Snapshot boundary behavior is preserved | `src/services/session-service.test.ts`, `src/services/progress-wiki-service.test.ts` | Existing unit/integration |
-| SillyTavern import | Character/world JSON converts to internal model | Imported character/world entries persist | `src/services/story-creation-service.test.ts`, `src/services/sillytavern-import-service.test.ts`, `tests/e2e/sillytavern-import.spec.ts` | Existing unit/e2e |
-| Context assembly | Context includes recent conversation/material/wiki | Context pack shape matches expectations | `src/services/context-assembly-service.test.ts` | Existing unit/integration |
-| Agent capabilities | Subagents are read-only; story material proposals are gated | Invalid mutation surfaces are rejected | `src/services/agent-capability-service.test.ts` | Existing unit |
-| Runtime config | Repo-local ignored user_data config generates and loads sample agents and SKILL.md | Workflow agents resolve from config | `src/services/agent-runtime/runtime-config.test.ts` | Existing unit |
-| Orchestration | Multi-agent workflow passes upstream output downstream | Two agent steps run in order | `src/services/orchestration-service.test.ts` | Existing unit/integration |
-| Trace viewer | Trace details are visible after play turn | Runtime payload can be inspected | `src/services/trace-service.test.ts`, `tests/e2e/trace-viewer.spec.ts` | Existing unit/e2e |
-| UI shell | Story library and panels render | Main app surfaces are reachable | `tests/e2e/story-library.spec.ts`, other e2e specs | Existing e2e |
+| 数据库迁移 | Schema 可干净应用 | 迁移能跑通 SQLite | `src/db/migration.test.ts` | 已覆盖 |
+| 故事创建 | Story 有默认 settings | Story 和 settings 持久化 | `src/services/story-service.test.ts` | 已覆盖 |
+| 故事目录 | 创建 Story 时创建本地目录 | `user_data/stories/<story-id>/saves` 存在 | `src/services/story-service.test.ts` | 已覆盖 |
+| 存档隔离 | 同故事下不同 session 不共享聊天 | 一个 session 的 transcript 为空 | `src/services/session-service.test.ts` | 已覆盖 |
+| 存档目录 | 创建 session 时创建 wiki 目录 | `saves/<session-id>/wiki` 存在 | `src/services/session-service.test.ts` | 已覆盖 |
+| 第一轮玩家输入 | 玩家消息和回复持久化 | conversation positions、reply variant、trace steps 存在 | `src/services/session-service.test.ts` | 已覆盖 |
+| 重掷 | 只有最新系统回复可变 | 新 variant 持久化并选中 | `src/services/session-service.test.ts`、`tests/e2e/reply-variants.spec.ts` | 已覆盖 |
+| Fork | Fork 只复制选中前缀 | source 后续记录不进入 fork | `src/services/session-service.test.ts`、`tests/e2e/session-fork.spec.ts` | 已覆盖 |
+| Wiki 快照 | Fork 复制合适记忆快照 | 快照边界正确 | `src/services/session-service.test.ts`、`src/services/progress-wiki-service.test.ts` | 已覆盖 |
+| SillyTavern 导入 | JSON 转内部模型 | 角色和世界书写入 | `src/services/story-creation-service.test.ts`、`src/services/sillytavern-import-service.test.ts`、`tests/e2e/sillytavern-import.spec.ts` | 已覆盖 |
+| 上下文组装 | context 包含近期聊天、资料、Wiki | Context Pack 形状正确 | `src/services/context-assembly-service.test.ts` | 已覆盖 |
+| Agent 能力 | Subagent 只读，资料变更受控 | 非法 mutation 被拒绝 | `src/services/agent-capability-service.test.ts` | 已覆盖 |
+| Runtime 配置 | repo-local `user_data` 配置可生成和加载 | workflow agents 从配置解析 | `src/services/agent-runtime/runtime-config.test.ts` | 已覆盖 |
+| 编排 | 多 Agent 顺序传递输出 | 两个 Agent step 按顺序运行 | `src/services/orchestration-service.test.ts` | 已覆盖 |
+| Trace Viewer | 游玩后可查看 trace | Runtime payload 可检查 | `src/services/trace-service.test.ts`、`tests/e2e/trace-viewer.spec.ts` | 已覆盖 |
+| UI Shell | 故事库和面板可达 | 主要应用界面可访问 | `tests/e2e/story-library.spec.ts` 等 | 已覆盖 |
 
-CI in `.github/workflows/ci.yml` runs typecheck, unit tests, build, and e2e tests.
+CI 的 `.github/workflows/ci.yml` 运行 typecheck、unit tests、build 和 e2e tests。
 
-## Proposed Tests
+## 建议补充
 
-| Use case | Rule | Expected behavior | Type |
+| 用例 | 规则 | 期望行为 | 类型 |
 | --- | --- | --- | --- |
-| Real Pi smoke test | Pi runtime can call configured provider | A guarded live test succeeds with local credentials | Guarded live |
-| Provider auth absent | Real runtime fails with actionable error | Missing auth/model produces clear UI or service error | Automated integration |
-| Runtime config invalid | Bad YAML or missing agent fails clearly | No partial conversation write | Automated integration |
-| File-backed wiki migration | Wiki file writer mirrors/owns document content | Fork and snapshot behavior remains correct | Automated integration |
-| MCP/web search tools | User-configured external tools are scoped to selected agents | Disallowed agent cannot call tool | Automated integration |
-| Trace privacy review | Trace includes expected context and no provider secret | Auth material never appears in trace payload | Automated unit/manual review |
+| 真实 Pi smoke test | Pi Runtime 能调用已配置 Provider | 有本地密钥时 guarded live test 通过 | Guarded live |
+| Provider auth 缺失 | Real runtime 给出可操作错误 | 缺密钥或模型时不写半截聊天 | 自动化 integration |
+| Runtime 配置无效 | 错 YAML 或缺 Agent 清晰失败 | 不产生部分 conversation write | 自动化 integration |
+| File-backed Wiki 迁移 | Wiki 文件 writer 成为内容来源 | Fork 和 snapshot 规则不变 | 自动化 integration |
+| MCP/web search tools | 外部工具只分配给允许的 Agent | 未授权 Agent 不能调用工具 | 自动化 integration |
+| Trace 隐私检查 | Trace 不包含 Provider secret | auth material 永不进入 trace payload | unit/manual review |
 
-## Gaps
+## 缺口
 
-| Gap | Exposure |
+| 缺口 | 风险 |
 | --- | --- |
-| No live provider CI | Pi adapter behavior is mostly verified structurally and through stub workflow, not against a real provider in CI. |
-| No cost/rate-limit checks | A misconfigured real provider workflow can spend tokens until provider-side limits apply. |
-| No file-backed wiki tests | Directory layout exists, but wiki document content is still SQLite-backed. |
-| No MCP/tool-call tests | External tool support is planned but not wired into MVP play. |
-| No multi-user auth tests | By design there is no account system; adding accounts will require a new permission model and tests. |
+| CI 没有 live provider | Pi adapter 主要通过结构和 Stub workflow 验证，CI 不碰真实 Provider。 |
+| 没有成本/限流保护 | 真实 Provider workflow 配错后，消耗控制依赖 Provider 侧。 |
+| 没有 file-backed Wiki 测试 | 目录已存在，但 Wiki 内容仍是 SQLite-backed。 |
+| 没有 MCP/tool-call 测试 | 外部工具支持计划中，尚未接入 MVP 游玩。 |
+| 没有多用户 auth 测试 | 当前设计无账号；未来加账号必须新增权限模型和测试。 |

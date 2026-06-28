@@ -1,8 +1,18 @@
 import { StoryLibraryDrawerClient } from "./story-drawer-client";
+import { listPlaySessions } from "@/services/session-service";
 import { listStories } from "@/services/story-service";
 
 export default async function StoryLibraryPage() {
   const stories = await listStories();
+  const storiesWithSessions = await Promise.all(
+    stories.map(async (story) => {
+      const sessions = await listPlaySessions(story.id);
+      return {
+        ...story,
+        latestSessionId: sessions.at(-1)?.id ?? null
+      };
+    })
+  );
 
   return (
     <main className="chat-shell">
@@ -15,16 +25,16 @@ export default async function StoryLibraryPage() {
       </header>
 
       <section className="home-layout">
-        <section className="home-hero">
+        <section className="home-hero chat-window-placeholder">
           <p className="eyebrow">本地单人文字 RP</p>
           <h1>故事库</h1>
-          <p className="lede">创建故事，导入 SillyTavern 角色卡或世界书，然后进入聊天窗口开始游玩。</p>
+          <p className="lede">从右侧故事库选择故事会直接切换到它最后一次存档，并打开故事资料编辑面板。</p>
         </section>
         <aside className="side-drawer static-drawer" aria-label="故事库">
           <div className="drawer-header">
             <h2>故事库</h2>
           </div>
-          <StoryLibraryDrawerClient stories={stories} />
+          <StoryLibraryDrawerClient stories={storiesWithSessions} />
         </aside>
       </section>
     </main>

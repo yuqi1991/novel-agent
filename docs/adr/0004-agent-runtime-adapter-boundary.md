@@ -1,3 +1,7 @@
-# Keep Agent Runtime Behind an Adapter
+# 把 Agent Runtime 放在 Adapter 边界之后
 
-Novel Agent defines an internal Agent Runtime boundary and treats pi-agent as an adapter candidate rather than a domain dependency. The Role-Play Domain owns Stories, Play Sessions, Context Packs, Progress Wikis, Reply Variants, and Orchestration Configurations; the runtime adapter owns conversion to provider calls, tool calls, skills, and one-level Subagents so the runtime can be replaced without rewriting product concepts.
+Novel Agent 定义内部 `AgentRuntime` 边界，把 pi-agent 视为 adapter，而不是 RP 业务层依赖。
+
+RP 领域拥有 Stories、Play Sessions、Context Packs、Progress Wikis、Reply Variants 和 Orchestration Configurations。Runtime adapter 负责转换到 Provider calls、tool calls、skills 和一级 Subagents。
+
+这样未来替换 Runtime 时，不需要重写产品概念和业务服务。

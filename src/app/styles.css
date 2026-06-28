@@ -352,6 +352,57 @@ label {
   gap: 12px;
 }
 
+.story-library-drawer {
+  align-content: start;
+}
+
+.drawer-toolstrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #121318;
+}
+
+.drawer-toolstrip.compact {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.tool-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #1b1d24;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 8px;
+}
+
+button.tool-button {
+  color: var(--ink);
+}
+
+.tool-button:hover,
+.tool-button.active {
+  border-color: var(--accent);
+  background: #2b261d;
+  color: var(--accent-strong);
+}
+
+.tool-button.passive {
+  color: var(--muted);
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -600,6 +651,52 @@ label {
   color: var(--accent-strong);
 }
 
+.story-card-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.st-profile-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.st-profile-top {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.st-avatar {
+  display: grid;
+  place-items: center;
+  width: 74px;
+  aspect-ratio: 1;
+  border: 1px solid #4b4639;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(213, 138, 23, 0.28), rgba(29, 31, 39, 0.8)),
+    #15161b;
+  color: var(--accent-strong);
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.st-profile-fields {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.st-profile-fields textarea {
+  min-height: 72px;
+}
+
+.st-tools-panel {
+  padding: 10px;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -644,8 +741,18 @@ details summary {
   align-content: center;
 }
 
+.chat-window-placeholder {
+  min-height: calc(100vh - 102px);
+  align-content: start;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: rgba(18, 19, 25, 0.55);
+  padding: 28px;
+}
+
 .home-hero h1 {
-  font-size: clamp(42px, 8vw, 84px);
+  font-size: 36px;
+  line-height: 1.12;
 }
 
 @media (max-width: 960px) {
@@ -674,7 +781,8 @@ details summary {
 
   .form-row,
   .form-row.two,
-  .material-summary {
+  .material-summary,
+  .st-profile-top {
     grid-template-columns: 1fr;
   }
 }

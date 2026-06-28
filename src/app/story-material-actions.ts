@@ -6,6 +6,8 @@ import {
   createWorldEntry,
   deleteCharacterProfile,
   deleteWorldEntry,
+  updateCharacterProfile,
+  updateWorldEntry,
   updatePlayerCharacter
 } from "@/services/story-material-service";
 
@@ -36,6 +38,19 @@ export async function deleteCharacterProfileAction(formData: FormData) {
   revalidateStory(storyId);
 }
 
+export async function updateCharacterProfileAction(formData: FormData) {
+  const storyId = String(formData.get("storyId") ?? "");
+  await updateCharacterProfile({
+    storyId,
+    profileId: String(formData.get("characterProfileId") ?? formData.get("profileId") ?? ""),
+    name: String(formData.get("name") ?? ""),
+    role: String(formData.get("role") ?? ""),
+    profileText: String(formData.get("profileText") ?? "")
+  });
+
+  revalidateStory(storyId);
+}
+
 export async function createWorldEntryAction(formData: FormData) {
   const storyId = String(formData.get("storyId") ?? "");
   await createWorldEntry({
@@ -54,6 +69,19 @@ export async function deleteWorldEntryAction(formData: FormData) {
   await deleteWorldEntry({
     storyId,
     worldEntryId: String(formData.get("worldEntryId") ?? "")
+  });
+
+  revalidateStory(storyId);
+}
+
+export async function updateWorldEntryAction(formData: FormData) {
+  const storyId = String(formData.get("storyId") ?? "");
+  await updateWorldEntry({
+    storyId,
+    worldEntryId: String(formData.get("worldEntryId") ?? ""),
+    title: String(formData.get("title") ?? ""),
+    body: String(formData.get("body") ?? ""),
+    inclusionMode: String(formData.get("inclusionMode") ?? "")
   });
 
   revalidateStory(storyId);

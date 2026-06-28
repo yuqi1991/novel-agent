@@ -1,3 +1,5 @@
-# Use MCP for Optional External Tools
+# 使用 MCP 管理可选外部工具
 
-Novel Agent uses user-provided MCP configuration as the MVP mechanism for optional external tools such as web search. Core play must work without external tools, but MCP gives advanced users a standard way to expose external capabilities to selected Skill Sets without baking network-dependent tools into the default role-play loop.
+Novel Agent 采用用户提供的 MCP 配置作为 MVP 外部工具机制，例如 web search。
+
+核心游玩必须在没有外部工具和网络访问时也能运行。MCP 给高级用户一个标准方式，把外部能力授权给选定 Skill Set，而不是把网络依赖写死进默认 RP 循环。

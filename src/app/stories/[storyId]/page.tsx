@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { updateStoryAction } from "@/app/actions";
 import { createExternalToolConfigurationAction } from "@/app/agent-capability-actions";
 import {
   createAgentProfileAction,
@@ -36,7 +37,9 @@ import {
   createWorldEntryAction,
   deleteCharacterProfileAction,
   deleteWorldEntryAction,
-  setPlayerCharacterAction
+  setPlayerCharacterAction,
+  updateCharacterProfileAction,
+  updateWorldEntryAction
 } from "@/app/story-material-actions";
 import { listExternalToolConfigurations } from "@/services/agent-capability-service";
 import { listAgentProfiles } from "@/services/agent-profile-service";
@@ -72,7 +75,7 @@ const inclusionModeLabels = {
 
 const panelLabels: Record<PanelKey, string> = {
   storyLibrary: "故事库",
-  worldBook: "世界书",
+  worldBook: "故事资料 / 世界书",
   agentProfiles: "Agent 管理",
   orchestration: "Agent 编排",
   saves: "存档管理",
@@ -241,21 +244,16 @@ export default async function StoryChatPage({
   }
 
   const defaultSession = await ensureDefaultPlaySession(storyId);
-  const [
-    material,
-    rawPlaySessions,
-    stories,
-    agentProfiles,
-    orchestrationConfigurations,
-    externalToolConfigurations
-  ] = await Promise.all([
-    listStoryMaterial(storyId),
-    listPlaySessions(storyId),
-    listStories(),
-    listAgentProfiles(),
-    listOrchestrationConfigurations(),
-    listExternalToolConfigurations()
-  ]);
+  const [material, rawPlaySessions, stories, agentProfiles, orchestrationConfigurations, externalToolConfigurations] =
+    await Promise.all([
+      listStoryMaterial(storyId),
+      listPlaySessions(storyId),
+      listStories(),
+      listAgentProfiles(),
+      listOrchestrationConfigurations(),
+      listExternalToolConfigurations()
+    ]);
+  const storySessionLists = await Promise.all(stories.map((libraryStory) => listPlaySessions(libraryStory.id)));
   const playSessions = readArray(rawPlaySessions);
   const activeSession =
     playSessions.find((session) => getSessionId(session) === querySessionId) ??
@@ -278,6 +276,15 @@ export default async function StoryChatPage({
   const selectedVariantIndex = getSelectedVariantIndex(latestReplyVariants, selectedVariantId);
   const playerCharacterProfileId = material.playerCharacterProfileId ?? null;
   const playerCharacter = characterProfiles.find((profile) => profile.id === playerCharacterProfileId) ?? null;
+  const storiesWithSessions = stories.map((libraryStory, index) => ({
+    ...libraryStory,
+    latestSessionId:
+      libraryStory.id === storyId
+        ? playSessions.at(-1)
+          ? getSessionId(playSessions.at(-1))
+          : activeSessionId
+        : storySessionLists[index]?.at(-1)?.id ?? null
+  }));
 
   return (
     <main className="chat-shell">
@@ -386,11 +393,13 @@ export default async function StoryChatPage({
               <Link href={`/stories/${storyId}?sessionId=${encodeURIComponent(activeSessionId)}`}>关闭</Link>
             </div>
             {activePanel === "storyLibrary" ? (
-              <StoryLibraryDrawerClient stories={stories} />
+              <StoryLibraryDrawerClient stories={storiesWithSessions} />
             ) : null}
             {activePanel === "worldBook" ? (
               <WorldBookPanel
                 storyId={storyId}
+                storyTitle={story.title}
+                storyDescription={story.description}
                 characterProfiles={characterProfiles}
                 worldEntries={worldEntries}
                 playerCharacterProfileId={playerCharacterProfileId}
@@ -431,24 +440,52 @@ export default async function StoryChatPage({
 
 function WorldBookPanel({
   storyId,
+  storyTitle,
+  storyDescription,
   characterProfiles,
   worldEntries,
   playerCharacterProfileId,
   playerCharacterName
 }: {
   storyId: string;
+  storyTitle: string;
+  storyDescription: string;
   characterProfiles: CharacterProfile[];
   worldEntries: WorldEntry[];
   playerCharacterProfileId: string | null;
   playerCharacterName: string;
 }) {
+  const primaryCharacter = characterProfiles[0] ?? null;
+  const openingEntry = worldEntries[0] ?? null;
+
   return (
-    <div className="drawer-stack">
-      <section className="material-summary" aria-label="故事材料概览">
-        <div><span>{characterProfiles.length}</span><p>角色</p></div>
-        <div><span>{worldEntries.length}</span><p>世界书</p></div>
-        <div><span>{playerCharacterName || "未设置"}</span><p>玩家角色</p></div>
+    <div className="drawer-stack story-card-editor">
+      <form action={updateStoryAction} className="panel st-profile-panel" aria-label="故事资料">
+        <input type="hidden" name="storyId" value={storyId} />
+        <div className="st-profile-top">
+          <div className="st-avatar" aria-hidden="true">{storyTitle.slice(0, 1)}</div>
+          <div className="st-profile-fields">
+            <label><span>故事 / 角色名</span><input name="title" defaultValue={storyTitle} required maxLength={120} /></label>
+            <label><span>故事简介</span><textarea name="description" defaultValue={storyDescription} /></label>
+          </div>
+        </div>
+        <div className="tag-row">
+          <span className="tag strong">{playerCharacterName || "未设置玩家角色"}</span>
+          <span className="tag">{characterProfiles.length} 角色</span>
+          <span className="tag">{worldEntries.length} 世界书</span>
+        </div>
+        <button type="submit">保存故事资料</button>
+      </form>
+
+      <section className="panel st-tools-panel" aria-label="资料工具">
+        <div className="drawer-toolstrip compact">
+          <span className="tool-button passive">人设</span>
+          <span className="tool-button passive">世界</span>
+          <span className="tool-button passive">首条</span>
+          <span className="tool-button passive">标签</span>
+        </div>
       </section>
+
       <form action={importSillyTavernCharacterAction} className="panel form-panel import-panel">
         <input type="hidden" name="storyId" value={storyId} />
         <h3>导入角色卡</h3>
@@ -463,6 +500,7 @@ function WorldBookPanel({
         <label><span>世界书 JSON</span><textarea name="payload" required /></label>
         <button type="submit">导入世界书</button>
       </form>
+
       <form action={createCharacterProfileAction} className="panel form-panel">
         <input type="hidden" name="storyId" value={storyId} />
         <h3>创建角色</h3>
@@ -478,6 +516,35 @@ function WorldBookPanel({
         <label><span>人设</span><textarea name="profileText" /></label>
         <button type="submit">创建角色</button>
       </form>
+
+      <section className="panel form-panel" aria-label="作者注释和角色描述">
+        <h3>作者注释 / 角色描述</h3>
+        {primaryCharacter ? (
+          <form action={updateCharacterProfileAction} className="wiki-document-form">
+            <input type="hidden" name="storyId" value={storyId} />
+            <input type="hidden" name="characterProfileId" value={primaryCharacter.id} />
+            <label><span>名称</span><input name="name" defaultValue={primaryCharacter.name} required maxLength={120} /></label>
+            <label>
+              <span>类型</span>
+              <select name="role" defaultValue={primaryCharacter.role}>
+                <option value="unspecified">未指定</option>
+                <option value="player">玩家角色</option>
+                <option value="non_player">NPC</option>
+              </select>
+            </label>
+            <label><span>角色描述</span><textarea name="profileText" defaultValue={primaryCharacter.profileText} /></label>
+            <button type="submit">保存角色描述</button>
+          </form>
+        ) : (
+          <p className="empty">还没有角色。创建或导入角色卡后，这里会显示主要角色描述。</p>
+        )}
+      </section>
+
+      <section className="panel form-panel" aria-label="第一条消息">
+        <h3>第一条消息</h3>
+        <textarea readOnly value="" placeholder="第一条消息当前在聊天窗口发送；后续可扩展为故事开场白字段。" />
+      </section>
+
       <section className="panel list-panel" aria-label="角色列表">
         <div className="panel-heading"><h3>角色</h3><span>{characterProfiles.length}</span></div>
         <ul className="material-list">
@@ -520,6 +587,29 @@ function WorldBookPanel({
         <label><span>内容</span><textarea name="body" /></label>
         <button type="submit">创建条目</button>
       </form>
+
+      {openingEntry ? (
+        <section className="panel form-panel" aria-label="世界资料编辑">
+          <h3>世界资料</h3>
+          <form action={updateWorldEntryAction} className="wiki-document-form">
+            <input type="hidden" name="storyId" value={storyId} />
+            <input type="hidden" name="worldEntryId" value={openingEntry.id} />
+            <label><span>标题</span><input name="title" defaultValue={openingEntry.title} required maxLength={160} /></label>
+            <label>
+              <span>加入方式</span>
+              <select name="inclusionMode" defaultValue={openingEntry.inclusionMode}>
+                <option value="semantic">语义检索</option>
+                <option value="always">始终加入</option>
+                <option value="triggered">关键词触发</option>
+                <option value="disabled">禁用</option>
+              </select>
+            </label>
+            <label><span>内容</span><textarea name="body" defaultValue={openingEntry.body} /></label>
+            <button type="submit">保存世界资料</button>
+          </form>
+        </section>
+      ) : null}
+
       <section className="panel list-panel" aria-label="世界书条目">
         <div className="panel-heading"><h3>世界书</h3><span>{worldEntries.length}</span></div>
         <ul className="material-list">

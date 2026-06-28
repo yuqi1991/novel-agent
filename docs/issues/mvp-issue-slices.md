@@ -1,275 +1,183 @@
-# Novel Agent MVP Issue Slices
+# Novel Agent MVP Issue 切片
 
-These issues break `docs/mvp-prd.md` into tracer-bullet vertical slices. Each slice should be independently demoable or verifiable after its blockers are complete.
+这些切片把 PRD 拆成可独立交付、可演示、可测试的纵向任务。每个切片都应穿透 UI、服务、持久化和测试中的必要部分。
 
-## 1. Bootstrap Local Web App + SQLite Store
+## 1. 本地 Web App 和 SQLite 启动骨架
 
-## What to build
+构建 Next.js 本地 Web UI、SQLite/Drizzle 迁移、基础 app shell 和 smoke test。
 
-Create the local Web UI application skeleton with SQLite-backed persistence and a minimal app shell. The slice should establish the project shape, migration path, configuration loading, and a first smoke-testable route/page so later slices can add real domain behavior.
+验收：
 
-## Acceptance criteria
+- 应用可本地启动并打开 Web UI。
+- SQLite 可通过可重复迁移初始化。
+- 本地配置和运行数据有稳定目录。
+- 有 smoke test 验证应用可在测试数据库上启动。
 
-- [ ] The app can be started locally and opens a Web UI shell.
-- [ ] SQLite is initialized through a repeatable migration path.
-- [ ] The app has a durable place to store domain data and runtime configuration.
-- [ ] A smoke test or equivalent verification proves the app boots against a test database.
+## 2. 故事库：创建和打开 Story
 
-## Blocked by
+实现 Story 创建、列表和打开，证明 Story 生命周期。
 
-None - can start immediately.
+验收：
 
-## User stories covered
+- 用户可创建带名称和简介的 Story。
+- Story Library 刷新后仍显示已创建 Story。
+- 用户可从列表打开 Story。
+- 测试覆盖 Story 创建和列表。
 
-52, 53, 54
+## 3. 故事资料编辑：角色和世界书条目
 
-## 2. Story Library: Create and Open Stories
+实现 Character Profiles、World Entries、Entry Inclusion Mode 和可选 Player Character。
 
-## What to build
+验收：
 
-Let the user create Stories, list existing Stories in the Story Library, and open one Story into its workspace. This should prove the basic Story lifecycle through schema, API/service, UI, and tests.
+- 用户可创建、编辑、删除 Character Profile。
+- 用户可设置或清空 Player Character。
+- 用户可创建、编辑、删除 World Entry。
+- World Entry 支持 always、triggered、semantic、disabled。
+- 测试覆盖资料持久化和玩家角色可选性。
 
-## Acceptance criteria
+## 4. SillyTavern 导入
 
-- [ ] A user can create a Story with a name and basic description.
-- [ ] Story Library lists persisted Stories after reload.
-- [ ] A user can open a Story from the list.
-- [ ] Tests cover Story creation and listing through the highest available application boundary.
+导入 SillyTavern 角色卡和 world/lorebook JSON，保留原始 Imported Asset 并转换为内部模型。
 
-## Blocked by
+验收：
 
-- 1. Bootstrap Local Web App + SQLite Store
+- 用户可导入常见角色卡 JSON 或 PNG metadata。
+- 原始角色卡保存为 Imported Asset。
+- 角色卡转换为 Character Profile。
+- 用户可导入 SillyTavern 世界书 JSON。
+- 世界书保存为 Imported Asset 并转换为 World Entries。
+- 测试覆盖代表性 fixture。
 
-## User stories covered
+## 5. 游玩工作区：Session 和第一条系统回复
 
-1, 11, 51
+实现可玩的最小闭环：创建/切换 Play Session，输入玩家消息，运行最小 Generation Workflow，保存 Narrative Response。
 
-## 3. Story Material Editor: Characters and World Entries
+验收：
 
-## What to build
+- 用户可在一个 Story 下创建多个 Play Session。
+- 不同 Play Session 的 Conversation Log 隔离。
+- 用户可在 Play Workspace 发送玩家消息。
+- 文件定义 workflow 能产生 Narrative Response。
+- 玩家消息和 Reply Variant 刷新后仍存在。
+- 测试覆盖 session 隔离和第一轮持久化。
 
-Add native Story Material editing for Character Profiles, World Entries, Entry Inclusion Mode, and optional Player Character selection. This should make a Story usable without imports.
+## 6. 编排构建器：线性 Agent 配置
 
-## Acceptance criteria
+实现可复用 Orchestration Configuration 和有序 Agent Assignments。
 
-- [ ] A user can create, edit, and delete Character Profiles under a Story.
-- [ ] A user can mark a Character Profile as the optional Player Character or leave it unset.
-- [ ] A user can create, edit, and delete World Entries.
-- [ ] A World Entry supports always, triggered, semantic, and disabled inclusion modes.
-- [ ] Tests cover Story Material persistence and Player Character optionality.
+验收：
 
-## Blocked by
+- 用户可创建和删除 Orchestration Configuration。
+- 用户可给配置添加有序 Agent Assignments。
+- 文件定义 Agent 支持指令、标准 `SKILL.md`、timeout、provider/model 和 allowed tools。
+- 全局 Model Defaults 可用于缺省 Agent。
+- 测试覆盖配置持久化和文件 workflow 顺序。
 
-- 2. Story Library: Create and Open Stories
+## 7. Workflow Trace 和失败处理
 
-## User stories covered
+记录 Generation Workflow attempt，并在失败时避免写入剧情聊天记录。
 
-7, 8, 9, 10, 48
+验收：
 
-## 4. SillyTavern Import: Character Cards and World Books
+- 成功 workflow 记录 step 输入、输出、耗时、配置和最终结果。
+- 失败 workflow 记录失败细节。
+- 失败 workflow 不追加 Reply Variant 或 Narrative Response。
+- Trace Viewer 可查看当前 Play Session 的 workflow attempt。
+- 测试覆盖 trace 记录和失败排除。
 
-## What to build
+## 8. Reply Variants 和 Mutable Tail Reroll
 
-Import SillyTavern character cards and world/lorebook JSON into a Story. Preserve original Imported Assets and convert them into native Character Profiles and World Entries.
+支持最新系统回复 reroll，保存所有 variants，并允许用户选择。
 
-## Acceptance criteria
+验收：
 
-- [ ] A user can import a common SillyTavern character card JSON or PNG metadata payload.
-- [ ] Imported character card data is preserved as an Imported Asset.
-- [ ] Imported character card data creates or updates a Character Profile.
-- [ ] A user can import a SillyTavern world/lorebook JSON file.
-- [ ] Imported world book data is preserved as an Imported Asset and converted to World Entries.
-- [ ] Tests cover conversion and preservation behavior for representative fixtures.
+- 用户可为最新系统回复再生成一个 Reply Variant。
+- UI 可切换 Mutable Tail 的 variants。
+- 所有 variants 持久化。
+- 下一轮上下文跟随当前 Selected Variant。
+- 测试覆盖 variant 保存、选择和 Mutable Tail 限制。
 
-## Blocked by
+## 9. 从历史楼层 Fork Session
 
-- 3. Story Material Editor: Characters and World Entries
+从旧 Conversation Position 或旧 Reply Variant 创建新 Play Session。
 
-## User stories covered
+验收：
 
-2, 3, 4, 5, 6
+- 用户可选择历史 Conversation Position 创建新 Play Session。
+- 用户可从旧 Reply Variant fork，不修改 source session。
+- 新 session 只继承 fork 点之前记录。
+- source session 后续记录不进入 fork。
+- 测试覆盖 selected path 和旧 variant 的 fork 继承。
 
-## 5. Play Workspace: Sessions and First Narrative Response
+## 10. Progress Wiki：编辑、快照和 Memory Boundary
 
-## What to build
+实现 session-owned Progress Wiki、累计 Wiki Snapshot 和 fork 快照选择。
 
-Create the first playable loop. The user can create and switch Play Sessions, enter one player message, run a minimal one-agent Generation Workflow, and persist one Narrative Response as a Reply Variant in the Conversation Log.
+验收：
 
-## Acceptance criteria
+- 每个 Play Session 拥有独立 Progress Wiki。
+- 用户可查看和编辑 Wiki 文档。
+- 系统可在 Memory Boundary 创建累计 Wiki Snapshot。
+- Fork 选择不超过 fork position 的最新 Wiki Snapshot。
+- 测试覆盖 session 隔离、snapshot 创建和 fork 继承。
 
-- [x] A user can create multiple Play Sessions under one Story.
-- [x] A user can switch between Play Sessions without shared Conversation Logs.
-- [x] A user can send one player message in the Play Workspace.
-- [x] A file-defined Generation Workflow produces one final Narrative Response.
-- [x] The player message and generated Reply Variant persist after reload.
-- [x] Tests cover session isolation and first-turn persistence.
+## 11. Context Assembly：近期聊天、Wiki 和 Story Material
 
-## Blocked by
+实现确定性 Context Pack 组装。
 
-- 2. Story Library: Create and Open Stories
-- 3. Story Material Editor: Characters and World Entries
+验收：
 
-## User stories covered
+- Context Pack 包含 selected path 的最近聊天。
+- Context Pack 包含适用 Progress Wiki。
+- Context Pack 包含 Character Profiles 和 Player Character。
+- World Entries 按 inclusion mode 进入上下文。
+- 测试覆盖各类输入组合。
 
-12, 13, 14, 15, 16, 30, 32, 39, 50
+## 12. Agent Runtime Adapter 和 Pi 集成
 
-## 6. Orchestration Builder: Linear Agent Configuration
+把 Pi 放到内部 `AgentRuntime` adapter 后面，并支持 Stub Runtime。
 
-## What to build
+验收：
 
-Let the user create reusable Orchestration Configurations composed of linear Agent Assignments. The builder should support role, instructions, Skill Set, model defaults/overrides, timeout, order, and allowed tools.
+- 业务层不直接依赖 Pi 数据结构。
+- Stub Runtime 用于自动化测试。
+- Pi Runtime 读取 `user_data/providers/*` 和 `user_data/agents/*`。
+- 缺少 Provider auth 时给出可操作错误。
+- 测试覆盖 Runtime 配置加载和 workflow 执行。
 
-## Acceptance criteria
+## 13. Skill、Tool 和 Subagent 权限
 
-- [x] A user can create and delete an Orchestration Configuration. Edit/duplicate remain future UI work.
-- [x] A user can add ordered Agent Assignments to a configuration.
-- [x] File-defined agents under `user_data/agents/*` can configure instructions, standard `SKILL.md` skills, timeout, provider/model settings, and allowed tools.
-- [x] Global Model Defaults apply when an agent has no override.
-- [x] Tests cover configuration persistence and file-defined workflow ordering.
+实现 Agent skill set、受控 tool surface 和一级只读 Subagent。
 
-## Blocked by
+验收：
 
-- 1. Bootstrap Local Web App + SQLite Store
+- Agent 从标准 `SKILL.md` 读取 skill。
+- 每个 Agent 有独立 skill set。
+- Subagent 最大深度 1。
+- Subagent 不能直接修改应用状态。
+- 外部工具通过用户配置的 MCP 授权给指定 Agent。
 
-## User stories covered
+## 14. 故事库和资料面板 UI 重构
 
-30, 31, 32, 33, 34, 35, 36, 37, 47
+实现类似 SillyTavern 的管理面板关系：顶部横向导航，中间聊天，侧边抽屉管理。
 
-## 7. Workflow Trace Viewer and Failure Handling
+验收：
 
-## What to build
+- 顶部有故事库、故事资料/世界书、Agent 管理、Agent 编排、存档管理、运行记录入口。
+- 故事库先显示所有 Story，顶部小按钮切换列表/新建/导入。
+- 新建或导入进入故事资料草稿，保存后才创建 Story 和默认 Session。
+- 点击已有 Story 时，聊天窗口切到最后一次 Session，并打开故事资料面板。
+- 存档管理面板包含聊天记录查看和 Progress Wiki 文件浏览/编辑。
 
-Record Workflow Traces for Generation Workflow attempts and expose them through a Trace Viewer. If an agent fails or times out, the workflow fails without writing a Reply Variant or story-visible Conversation Log entry.
+## 15. 文档和项目整理
 
-## Acceptance criteria
+把仓库整理为多人协作和多 Agent 开发可接手的结构。
 
-- [x] Successful workflow attempts record step inputs, outputs, timings, selected configuration, and final result.
-- [x] Failed workflow attempts record failure details.
-- [x] Failed workflows do not append a Reply Variant or Narrative Response to the Conversation Log.
-- [x] Trace Viewer lets the user inspect workflow attempts for a Play Session.
-- [x] Tests cover trace recording and failure exclusion from Conversation Log.
+验收：
 
-## Blocked by
-
-- 5. Play Workspace: Sessions and First Narrative Response
-- 6. Orchestration Builder: Linear Agent Configuration
-
-## User stories covered
-
-43, 44, 45, 46
-
-## 8. Reply Variants and Mutable Tail Reroll
-
-## What to build
-
-Support rerolling the latest system response. Store all Reply Variants at the Mutable Tail and let the user switch the Selected Variant before continuing.
-
-## Acceptance criteria
-
-- [ ] A user can generate another Reply Variant for the latest system response.
-- [ ] The UI lets the user navigate variants at the Mutable Tail.
-- [ ] All variants are persisted.
-- [ ] The Selected Path follows the currently selected latest variant when the next user message is sent.
-- [ ] Tests cover variant persistence, selection, and Mutable Tail restrictions.
-
-## Blocked by
-
-- 5. Play Workspace: Sessions and First Narrative Response
-
-## User stories covered
-
-17, 18, 19
-
-## 9. Session Fork from Older Conversation Position
-
-## What to build
-
-Let the user create a Session Fork from an older Conversation Position or older Reply Variant. The fork must inherit the selected source prefix and discard later records.
-
-## Acceptance criteria
-
-- [ ] A user can choose an older Conversation Position and create a new Play Session from it.
-- [ ] A user can fork from an older Reply Variant without mutating the source session.
-- [ ] The new session inherits records only through the fork position.
-- [ ] Later source-session records are not present in the fork.
-- [ ] Tests cover fork inheritance for selected paths and older variants.
-
-## Blocked by
-
-- 8. Reply Variants and Mutable Tail Reroll
-
-## User stories covered
-
-20, 21, 22
-
-## 10. Progress Wiki: Editor, Snapshots, and Memory Boundary
-
-## What to build
-
-Add session-owned Progress Wiki support with editable documents, cumulative Wiki Snapshots, and Memory Boundary-aware snapshot selection for forks.
-
-## Acceptance criteria
-
-- [ ] Each Play Session has an independent Progress Wiki.
-- [ ] A user can view and edit Progress Wiki documents.
-- [ ] The system can create a cumulative Wiki Snapshot at a Memory Boundary.
-- [ ] Forking chooses the latest Wiki Snapshot that does not exceed the fork position.
-- [ ] Tests cover session isolation, snapshot creation, and fork snapshot selection.
-
-## Blocked by
-
-- 5. Play Workspace: Sessions and First Narrative Response
-- 9. Session Fork from Older Conversation Position
-
-## User stories covered
-
-23, 24, 25, 26, 27, 28, 49
-
-## 11. Context Assembly with Story Material and Progress Wiki
-
-## What to build
-
-Build Context Pack assembly for Generation Workflows. It should combine recent selected-path conversation, Story Material, World Entries by Entry Inclusion Mode, optional Player Character material, and Progress Wiki content.
-
-## Acceptance criteria
-
-- [ ] Context assembly includes recent selected-path conversation turns.
-- [ ] Context assembly includes optional Player Character material only when configured.
-- [ ] World Entries are selected according to inclusion mode.
-- [ ] Progress Wiki content can be included from the current Play Session.
-- [ ] Tests cover context assembly for trigger-based, semantic, always, and disabled World Entries.
-
-## Blocked by
-
-- 3. Story Material Editor: Characters and World Entries
-- 10. Progress Wiki: Editor, Snapshots, and Memory Boundary
-
-## User stories covered
-
-9, 23, 27, 28
-
-## 12. Agent Tools, Skills, MCP Config, and Subagents
-
-## What to build
-
-Add the MVP capability model for Agent-Facing Tools, Skill Sets, user-provided MCP external tool configuration, read-only one-level Subagents, Progress Wiki Skill behavior, and Story Material Proposal review boundaries.
-
-## Acceptance criteria
-
-- [x] File-defined agents and database Agent Assignments can be granted a Skill Set and allowed Agent-Facing Tools.
-- [ ] User-provided MCP configuration can expose optional external tools to selected Skill Sets.
-- [x] A main agent can spawn one level of read-only Subagents and receive Subagent Results in the service model.
-- [x] Subagents cannot write Conversation Log, Progress Wiki, or Story Material directly in the service model.
-- [ ] Story Material Write Tool creates Story Material Proposals requiring user review.
-- [ ] Progress Wiki mutation is only available through Progress Wiki Skill behavior.
-- [x] Tests cover subagent read-only constraints and proposal review boundaries.
-
-## Blocked by
-
-- 6. Orchestration Builder: Linear Agent Configuration
-- 7. Workflow Trace Viewer and Failure Handling
-- 11. Context Assembly with Story Material and Progress Wiki
-
-## User stories covered
-
-29, 36, 37, 38, 40, 41, 42
+- README、AGENTS、CONTRIBUTING 说明安装、启动、验证和安全边界。
+- 技术架构拆分为前端、后端、Agent Runtime 与数据说明。
+- `documentation/` 说明当前实现、流程、变量、权限、测试和自动化。
+- `user_data/`、本地密钥、数据库和私有角色卡全部 git ignore。
+- CI 覆盖 typecheck、unit、build 和 e2e。

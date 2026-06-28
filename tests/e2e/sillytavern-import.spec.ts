@@ -18,7 +18,7 @@ test("Story Workspace imports SillyTavern character JSON", async ({ page }) => {
   await createStory(page, storyTitle, "A workspace for importing SillyTavern material.");
 
   await expect(page.getByRole("heading", { name: storyTitle })).toBeVisible();
-  const drawer = await openPanel(page, "世界书");
+  const drawer = await openPanel(page, "故事资料 / 世界书");
 
   const importForm = drawer.getByRole("heading", { name: "导入角色卡" }).locator("..");
   await importForm.getByLabel("文件名").fill("mira-vale.json");
@@ -41,7 +41,7 @@ test("Story Workspace imports SillyTavern world JSON", async ({ page }) => {
   await createStory(page, storyTitle, "A workspace for importing SillyTavern world info.");
 
   await expect(page.getByRole("heading", { name: storyTitle })).toBeVisible();
-  const drawer = await openPanel(page, "世界书");
+  const drawer = await openPanel(page, "故事资料 / 世界书");
 
   const importForm = drawer.getByRole("heading", { name: "导入世界书" }).locator("..");
   await importForm.getByLabel("文件名").fill("bell-reef-world.json");

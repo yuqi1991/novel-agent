@@ -12,7 +12,9 @@ import {
   deleteCharacterProfile,
   deleteWorldEntry,
   listStoryMaterial,
-  updatePlayerCharacter
+  updateCharacterProfile,
+  updatePlayerCharacter,
+  updateWorldEntry
 } from "./story-material-service";
 
 let tempDir: string;
@@ -91,6 +93,71 @@ describe("story-material-service", () => {
     );
 
     expect(worldEntry.inclusionMode).toBe("semantic");
+  });
+
+  it("updates Character Profile and World Entry details", async () => {
+    const db = await createTestDatabase();
+    const story = await createStory({ title: "Editable Material" }, db);
+    const character = await createCharacterProfile(
+      {
+        storyId: story.id,
+        name: "Old Name",
+        role: "unspecified",
+        profileText: "Old profile."
+      },
+      db
+    );
+    const worldEntry = await createWorldEntry(
+      {
+        storyId: story.id,
+        title: "Old Place",
+        body: "Old world text.",
+        inclusionMode: "semantic",
+        triggerConfig: { keywords: ["old"] },
+        tags: ["archive"]
+      },
+      db
+    );
+
+    const updatedCharacter = await updateCharacterProfile(
+      {
+        storyId: story.id,
+        profileId: character.id,
+        name: "New Name",
+        role: "non_player",
+        profileText: "New profile."
+      },
+      db
+    );
+    const updatedWorldEntry = await updateWorldEntry(
+      {
+        storyId: story.id,
+        worldEntryId: worldEntry.id,
+        title: "New Place",
+        body: "New world text.",
+        inclusionMode: "always"
+      },
+      db
+    );
+
+    expect(updatedCharacter).toEqual(
+      expect.objectContaining({
+        id: character.id,
+        name: "New Name",
+        role: "non_player",
+        profileText: "New profile."
+      })
+    );
+    expect(updatedWorldEntry).toEqual(
+      expect.objectContaining({
+        id: worldEntry.id,
+        title: "New Place",
+        body: "New world text.",
+        inclusionMode: "always"
+      })
+    );
+    expect(updatedWorldEntry.triggerConfigJson).toBe(JSON.stringify({ keywords: ["old"] }));
+    expect(updatedWorldEntry.tagsJson).toBe(JSON.stringify(["archive"]));
   });
 
   it("sets, changes, and clears the optional Player Character", async () => {

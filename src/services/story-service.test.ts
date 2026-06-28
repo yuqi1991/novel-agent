@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { createDatabase } from "@/db/client";
 import { storySettings } from "@/db/schema";
-import { createStory, listStories } from "./story-service";
+import { createStory, listStories, updateStory } from "./story-service";
 
 let tempDir: string;
 
@@ -43,5 +43,23 @@ describe("story-service", () => {
   it("rejects blank Story titles", async () => {
     const db = await createTestDatabase();
     await expect(createStory({ title: "   " }, db)).rejects.toThrow(/Story title is required/);
+  });
+
+  it("updates a Story title and description", async () => {
+    const db = await createTestDatabase();
+    const story = await createStory({ title: "Old Gate", description: "Old notes." }, db);
+
+    const updated = await updateStory(
+      { storyId: story.id, title: "New Gate", description: "New notes." },
+      db
+    );
+
+    expect(updated).toEqual(
+      expect.objectContaining({
+        id: story.id,
+        title: "New Gate",
+        description: "New notes."
+      })
+    );
   });
 });
