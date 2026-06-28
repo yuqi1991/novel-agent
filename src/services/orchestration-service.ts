@@ -47,7 +47,7 @@ export async function ensureDefaultOrchestrationConfiguration(database: DbExecut
     id: configurationId,
     name: defaultConfigurationName,
     description: "Minimal one-agent Pi play loop for local MVP sessions.",
-    modelDefaultsJson: JSON.stringify({})
+    modelDefaultsJson: JSON.stringify({ provider: "deepseek", model: "deepseek-v4-flash" })
   });
 
   await database.insert(agentAssignments).values({

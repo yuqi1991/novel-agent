@@ -1,4 +1,3 @@
-import { loadAgentRuntimeConfig } from "./runtime-config";
 import { DeterministicAgentRuntime } from "./stub-runtime";
 import type { AgentRuntime } from "./types";
 
@@ -9,13 +8,18 @@ export function getAgentRuntime() {
     return runtimeOverride;
   }
 
-  const config = loadAgentRuntimeConfig();
-  if (config.runtime === "stub") {
+  const forcedRuntime = process.env.NOVEL_AGENT_RUNTIME || (process.env.NODE_ENV === "test" ? "stub" : "");
+  if (forcedRuntime === "stub") {
     return new DeterministicAgentRuntime();
   }
 
   return {
     async runTurn(input) {
+      const { loadAgentRuntimeConfig } = await import("./runtime-config");
+      const config = loadAgentRuntimeConfig();
+      if (config.runtime === "stub") {
+        return new DeterministicAgentRuntime().runTurn(input);
+      }
       const { PiAgentRuntime } = await import("./pi-runtime");
       return new PiAgentRuntime(config).runTurn(input);
     }
